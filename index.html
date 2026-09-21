@@ -3,330 +3,677 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>F.O.S. Experiment Dossier & Yearbook</title>
+  <title>F.O.S. LABS - Game UI Dossier & Yearbook</title>
+  
+  <!-- Fonts: Google Fonts Bebas Neue, Permanent Marker, and Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:ital,wght@0,400;0,700;0,900;1,900&family=Permanent+Marker&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
   <style>
     :root {
-      --bg-desk: #121318;
-      --paper-bg: #ece7db;
-      --paper-grid: #ded8c8;
-      --ink-color: #2b2b2b;
-      --red-accent: #d93838;
-      --tech-card-bg: #1c1d22;
-      --border-color: #383940;
+      --bg-dark: #111317;
+      --bg-card: #eef0f2;
+      --panel-border: #141519;
+      --red-accent: #ff2a4b;
+      --red-dark: #b8122d;
+      --yellow-accent: #ffcb05;
+      --orange-accent: #ff7d00;
+      --cyan-accent: #00e5ff;
+      --ink-black: #0c0d10;
+      --text-muted: #6c757d;
     }
 
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Courier New', Courier, monospace, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     body {
-      background-color: var(--bg-desk);
-      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-      background-size: 20px 20px;
-      color: var(--ink-color);
+      background-color: var(--bg-dark);
+      font-family: 'Montserrat', sans-serif;
+      color: #fff;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      padding: 20px 10px;
+      justify-content: flex-start;
+      overflow-x: hidden;
+      /* Halftone overlay background */
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.1) 15%, transparent 16%),
+        radial-gradient(rgba(255, 255, 255, 0.05) 15%, transparent 16%);
+      background-size: 20px 20px, 40px 40px;
+      background-position: 0 0, 10px 10px;
     }
 
-    /* Container Utama Binder/Buku */
-    .yearbook-wrapper {
+    /* Outer Wrapper */
+    .game-viewport {
       width: 100%;
       max-width: 1100px;
-      background: var(--paper-bg);
-      background-image: 
-        linear-gradient(var(--paper-grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--paper-grid) 1px, transparent 1px);
-      background-size: 16px 16px;
-      border-radius: 12px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 100px rgba(0, 0, 0, 0.05);
-      border: 2px solid #3a3630;
-      display: flex;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Engsel Ring Binder (Tengah di Desktop) */
-    .binder-spine {
-      width: 40px;
-      background: #222;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: space-around;
-      align-items: center;
-      padding: 30px 0;
-      z-index: 10;
-      box-shadow: inset -3px 0 5px rgba(0,0,0,0.5), inset 3px 0 5px rgba(0,0,0,0.5);
-    }
-
-    .ring {
-      width: 50px;
-      height: 14px;
-      background: linear-gradient(180deg, #888, #fff, #444);
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
-    }
-
-    /* Halaman Kiri & Kanan */
-    .page {
-      flex: 1;
-      padding: 35px 30px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Halaman Kiri: Profil & Header */
-    .page-left {
-      border-right: 1px dashed #b5ae9e;
-    }
-
-    .header-badge {
-      display: inline-block;
-      border: 2px solid var(--red-accent);
-      color: var(--red-accent);
-      padding: 4px 8px;
-      font-weight: bold;
-      font-size: 0.75rem;
-      letter-spacing: 2px;
-      width: fit-content;
-      margin-bottom: 15px;
-      text-transform: uppercase;
-    }
-
-    h1.title {
-      font-family: 'Arial Black', Impact, sans-serif;
-      font-size: 2.2rem;
-      line-height: 1;
-      color: #1a1a1a;
-      letter-spacing: -1px;
-      margin-bottom: 5px;
-    }
-
-    .subtitle {
-      font-size: 0.85rem;
-      color: #666;
-      border-bottom: 2px solid #1a1a1a;
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-    }
-
-    /* ID Card Tablet Frame (Elemen Tech) */
-    .id-card-frame {
-      background: var(--tech-card-bg);
-      border-radius: 10px;
       padding: 15px;
-      color: #fff;
       position: relative;
-      margin-bottom: 25px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
     }
 
-    .id-card-frame::before {
-      content: "OFFICIAL DOSSIER";
+    .manga-header {
+      position: relative;
+      width: 100%;
+      background: #1a1c23;
+      border: 4px solid var(--panel-border);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+      margin-bottom: 20px;
+      overflow: hidden;
+      border-radius: 4px;
+      transform: skewY(-1deg);
+    }
+
+    /* Screentone pattern overlay for banner */
+    .manga-header::before {
+      content: "";
       position: absolute;
-      top: -10px;
-      right: 15px;
-      background: var(--red-accent);
-      color: #fff;
-      font-size: 0.65rem;
-      padding: 2px 6px;
-      font-weight: bold;
-    }
-
-    .id-card-header {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-
-    .avatar-box {
-      width: 70px;
-      height: 70px;
-      background: #333;
-      border: 2px solid #555;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.8rem;
-    }
-
-    .id-info h3 {
-      font-size: 1.1rem;
-      color: #00f0ff;
-      margin-bottom: 4px;
-    }
-
-    .id-info p {
-      font-size: 0.75rem;
-      color: #aaa;
-    }
-
-    /* Stempel & Aksesoris Scrapbook */
-    .stamp {
-      position: absolute;
-      bottom: 20px;
-      left: 30px;
-      border: 3px double var(--red-accent);
-      color: var(--red-accent);
-      padding: 5px 12px;
-      font-weight: bold;
-      font-size: 0.9rem;
-      transform: rotate(-12deg);
-      opacity: 0.85;
+      inset: 0;
+      background-image: radial-gradient(var(--ink-black) 20%, transparent 20%);
+      background-size: 6px 6px;
+      opacity: 0.15;
       pointer-events: none;
     }
 
-    /* Halaman Kanan: Grid Proyek */
-    .page-right {
+    .banner-content {
       position: relative;
-    }
-
-    .section-title {
-      font-size: 1.2rem;
-      font-weight: bold;
-      border-bottom: 1px solid #1a1a1a;
-      padding-bottom: 5px;
-      margin-bottom: 20px;
+      z-index: 2;
+      padding: 25px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: linear-gradient(135deg, rgba(255,42,75,0.9) 0%, rgba(20,21,25,0.95) 60%);
     }
 
-    .project-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    /* Card Proyek Style Polaroid */
-    .polaroid-card {
-      background: #fff;
-      padding: 10px 10px 15px 10px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-      border: 1px solid #ddd;
-      transition: all 0.3s ease;
-      position: relative;
-      cursor: pointer;
-    }
-
-    .polaroid-card:nth-child(even) {
-      transform: rotate(1.5deg);
-    }
-    .polaroid-card:nth-child(odd) {
-      transform: rotate(-1.5deg);
-    }
-
-    .polaroid-card:hover {
-      transform: scale(1.04) rotate(0deg) !important;
-      z-index: 5;
-      box-shadow: 0 12px 25px rgba(0,0,0,0.25);
-    }
-
-    /* Efek Solasi di Atas Polaroid */
-    .tape {
-      position: absolute;
-      top: -10px;
-      left: 30%;
-      width: 50px;
-      height: 18px;
-      background: rgba(240, 230, 200, 0.6);
-      border: 1px solid rgba(200, 190, 150, 0.5);
-      transform: rotate(-3deg);
-    }
-
-    .card-media {
-      height: 100px;
-      background: #1e1e24;
+    .banner-title-box {
       display: flex;
+      flex-direction: column;
+    }
+
+    .manga-badge-tag {
+      display: inline-block;
+      background: #000;
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      padding: 2px 10px;
+      width: fit-content;
+      transform: skewX(-12deg);
+      border: 2px solid var(--yellow-accent);
+      box-shadow: 3px 3px 0 var(--red-accent);
+      margin-bottom: 5px;
+    }
+
+    .manga-title {
+      font-family: 'Bebas Neue', cursive, sans-serif;
+      font-size: 3.5rem;
+      line-height: 0.95;
+      letter-spacing: 3px;
+      color: #fff;
+      text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    }
+
+    .manga-title span {
+      color: var(--yellow-accent);
+    }
+
+    .manga-subtitle {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      color: #ddd;
+      text-shadow: 2px 2px 0 #000;
+    }
+
+    /* Speech bubble in banner */
+    .banner-speech {
+      position: relative;
+      background: #fff;
+      color: #000;
+      font-family: 'Permanent Marker', cursive;
+      padding: 10px 18px;
+      font-size: 1.1rem;
+      border: 3px solid #000;
+      box-shadow: 5px 5px 0 #000;
+      transform: rotate(3deg);
+    }
+
+    .banner-speech::after {
+      content: "";
+      position: absolute;
+      bottom: -15px;
+      left: 20px;
+      border-width: 15px 15px 0 0;
+      border-style: solid;
+      border-color: #fff transparent transparent transparent;
+      display: block;
+      width: 0;
+    }
+
+    .banner-speech::before {
+      content: "";
+      position: absolute;
+      bottom: -19px;
+      left: 18px;
+      border-width: 17px 17px 0 0;
+      border-style: solid;
+      border-color: #000 transparent transparent transparent;
+      display: block;
+      width: 0;
+    }
+
+    .nav-tabs-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: -4px;
+      z-index: 10;
+      padding-left: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-tab {
+      background: #232630;
+      color: #888;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 2px;
+      padding: 8px 25px;
+      border: 3px solid var(--panel-border);
+      border-bottom: none;
+      transform: skewX(-15deg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 3px -3px 0 rgba(0,0,0,0.5);
+    }
+
+    .nav-tab .tab-inner {
+      transform: skewX(15deg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-tab:hover {
+      background: #323745;
+      color: #fff;
+    }
+
+    .nav-tab.active {
+      background: #fff;
+      color: #000;
+      border-color: #000;
+      box-shadow: 5px -5px 0 var(--red-accent);
+      transform: skewX(-15deg) translateY(-4px);
+    }
+
+    .nav-tab.active .tab-inner {
+      font-weight: 900;
+    }
+
+    .main-stage {
+      background: var(--bg-card);
+      border: 4px solid #000;
+      box-shadow: 12px 12px 0 #000;
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    /* Screentone effect on off-white panel */
+    .main-stage-bg {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(#cbd5e1 20%, transparent 20%);
+      background-size: 12px 12px;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .stage-header {
+      background: #111317;
+      color: #fff;
+      padding: 12px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 4px solid #000;
+      z-index: 2;
+    }
+
+    .stage-header-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+      color: var(--yellow-accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .buff-badge {
+      background: var(--cyan-accent);
+      color: #000;
+      font-family: 'Bebas Neue', sans-serif;
+      padding: 4px 12px;
+      font-size: 1.1rem;
+      letter-spacing: 1.5px;
+      transform: skewX(-10deg);
+      border: 2px solid #000;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    /* Card View Grid Container */
+    .content-viewport {
+      position: relative;
+      z-index: 2;
+      padding: 25px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .dossier-card {
+      display: none;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 25px;
+      align-items: center;
+      animation: animeSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .dossier-card.active {
+      display: grid;
+    }
+
+    @keyframes animeSlideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateX(0);
+      }
+    }
+
+    /* Left Side: Dynamic Manga Artwork Box */
+    .art-panel {
+      position: relative;
+      background: #0c0d10;
+      border: 4px solid #000;
+      box-shadow: 8px 8px 0 var(--red-accent);
+      height: 340px;
+      display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 2rem;
-      margin-bottom: 10px;
-      border: 1px solid #eee;
+      overflow: hidden;
+      transform: rotate(-1deg);
+      transition: transform 0.3s ease;
     }
 
-    .card-caption {
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #222;
-      margin-bottom: 4px;
+    .art-panel:hover {
+      transform: rotate(0deg) scale(1.01);
     }
 
-    .card-desc {
-      font-size: 0.7rem;
-      color: #666;
-      line-height: 1.3;
-      margin-bottom: 10px;
+    /* Halftone pattern inside art panel */
+    .art-panel-screentone {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.25) 20%, transparent 20%),
+        linear-gradient(45deg, rgba(255,42,75,0.2) 0%, transparent 70%);
+      background-size: 10px 10px, 100% 100%;
+      pointer-events: none;
     }
 
-    .btn-action {
-      display: block;
-      width: 100%;
-      padding: 6px;
-      background: #2b2b2b;
-      color: #fff;
-      text-align: center;
-      font-size: 0.7rem;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
+    .art-icon {
+      font-size: 7rem;
+      z-index: 2;
+      filter: drop-shadow(5px 5px 0 #000);
+      animation: floatIcon 3s ease-in-out infinite alternate;
     }
 
-    .btn-action:hover {
+    @keyframes floatIcon {
+      0% { transform: translateY(-5px) rotate(-3deg); }
+      100% { transform: translateY(8px) rotate(3deg); }
+    }
+
+    .art-caption {
+      position: absolute;
+      bottom: 12px;
+      background: #fff;
+      color: #000;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      padding: 4px 16px;
+      border: 3px solid #000;
+      box-shadow: 4px 4px 0 #000;
+      transform: skewX(-10deg);
+      z-index: 3;
+    }
+
+    /* Right Side: Information & Level Nodes */
+    .info-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .dossier-number-tag {
+      align-self: flex-start;
       background: var(--red-accent);
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 2px;
+      padding: 3px 12px;
+      border: 2px solid #000;
+      box-shadow: 3px 3px 0 #000;
+      transform: skewX(-10deg);
     }
 
-    /* Catatan Tangan di Bawah Halaman */
-    .handwritten-note {
-      margin-top: auto;
-      padding-top: 15px;
-      font-style: italic;
-      font-size: 0.8rem;
-      color: #444;
-      border-top: 1px dashed #b5ae9e;
+    .dossier-project-title {
+      font-family: 'Bebas Neue', cursive, sans-serif;
+      font-size: 2.8rem;
+      color: #0c0d10;
+      line-height: 1;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 #fff;
     }
 
-    /* Modal Live Preview */
+    .tech-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e222d;
+      color: var(--cyan-accent);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      padding: 4px 12px;
+      border-radius: 2px;
+      border: 2px solid #000;
+      width: fit-content;
+    }
+
+    .dossier-desc {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #2d3748;
+      font-weight: 700;
+      background: #fff;
+      padding: 15px;
+      border: 3px solid #000;
+      box-shadow: 5px 5px 0 #000;
+      position: relative;
+    }
+
+    /* Manga speech node buttons for level selection look */
+    .level-speech-bubbles {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 5px;
+    }
+
+    .bubble-node {
+      background: #fff;
+      color: #000;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      padding: 5px 12px;
+      border: 2px solid #000;
+      border-radius: 15px;
+      box-shadow: 2px 2px 0 #000;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .bubble-node.active {
+      background: var(--yellow-accent);
+      font-weight: bold;
+      transform: scale(1.08) translateY(-2deg);
+      box-shadow: 4px 4px 0 #000;
+    }
+
+    .bottom-bar {
+      background: #16181f;
+      border-top: 4px solid #000;
+      padding: 18px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      z-index: 2;
+      flex-wrap: wrap;
+    }
+
+    .exp-container {
+      flex: 1;
+      min-width: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .exp-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 1.5px;
+      color: #fff;
+    }
+
+    .exp-bar-bg {
+      height: 22px;
+      background: #090a0c;
+      border: 3px solid #000;
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+    }
+
+    .exp-bar-fill {
+      height: 100%;
+      width: 60%;
+      background: linear-gradient(90deg, var(--red-dark), var(--red-accent), var(--orange-accent));
+      transition: width 0.4s ease;
+      position: relative;
+    }
+
+    /* Action Receive Button */
+    .btn-receive-realm {
+      background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+      color: #000;
+      font-family: 'Bebas Neue', cursive, sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 3px;
+      padding: 12px 35px;
+      border: 4px solid #000;
+      box-shadow: 6px 6px 0 #000;
+      cursor: pointer;
+      transform: skewX(-12deg);
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .btn-receive-realm .btn-text {
+      transform: skewX(12deg);
+    }
+
+    .btn-receive-realm:hover {
+      background: linear-gradient(135deg, #ffe082 0%, #ffca28 100%);
+      transform: skewX(-12deg) translate(-2deg, -2deg);
+      box-shadow: 9px 9px 0 #000;
+    }
+
+    .btn-receive-realm:active {
+      transform: skewX(-12deg) translate(2deg, 2deg);
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    /* Page Switcher Navigation Controls */
+    .controls-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 15px;
+      padding: 0 5px;
+    }
+
+    .btn-back-next {
+      background: var(--red-accent);
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      padding: 8px 22px;
+      border: 3px solid #000;
+      box-shadow: 4px 4px 0 #000;
+      cursor: pointer;
+      transform: skewX(-10deg);
+      transition: all 0.2s ease;
+    }
+
+    .btn-back-next .inner {
+      transform: skewX(10deg);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-back-next:hover {
+      background: #ff4763;
+      transform: skewX(-10deg) translateY(-2deg);
+      box-shadow: 6px 6px 0 #000;
+    }
+
+    .btn-back-next:disabled {
+      background: #444;
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: skewX(-10deg);
+    }
+
+    .page-counter-badge {
+      background: #000;
+      color: var(--yellow-accent);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      padding: 6px 20px;
+      border: 2px solid var(--yellow-accent);
+      box-shadow: 3px 3px 0 var(--red-accent);
+    }
+
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(5px);
-      z-index: 100;
+      background: rgba(12, 13, 16, 0.95);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
       display: none;
-      justify-content: center;
-      align-items: center;
-      padding: 15px;
+      flex-direction: column;
+      padding: 20px;
+      animation: modalFade 0.25s ease forwards;
     }
 
-    .modal-content {
-      width: 100%;
-      max-width: 950px;
-      height: 85vh;
-      background: #111;
-      border-radius: 8px;
-      border: 2px solid #444;
+    @keyframes modalFade {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-game-frame {
+      flex: 1;
+      background: #16181f;
+      border: 4px solid #000;
+      box-shadow: 0 0 30px rgba(255, 42, 75, 0.4);
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
-      position: relative;
+      border-radius: 6px;
     }
 
-    .close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      background: var(--red-accent);
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      font-weight: bold;
+    .modal-header {
+      height: 60px;
+      background: #0c0d10;
+      border-bottom: 4px solid #000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+    }
+
+    .modal-title-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      color: var(--yellow-accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-modal {
+      background: #222633;
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      border: 2px solid #000;
+      padding: 6px 16px;
       cursor: pointer;
-      z-index: 10;
+      box-shadow: 3px 3px 0 #000;
+      transition: all 0.2s ease;
+    }
+
+    .btn-modal:hover {
+      background: #33394d;
+    }
+
+    .btn-modal-close {
+      background: var(--red-accent);
+      color: #fff;
+    }
+
+    .btn-modal-close:hover {
+      background: #ff1c40;
+    }
+
+    .modal-iframe-box {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #000;
     }
 
     iframe {
@@ -335,164 +682,383 @@
       border: none;
     }
 
-    /* ========================================== */
-    /* RESPONSIVE DESIGN (MOBILE & TABLET)        */
-    /* ========================================== */
-    @media (max-width: 850px) {
-      .yearbook-wrapper {
-        flex-direction: column;
+    @media (max-width: 768px) {
+      .manga-title {
+        font-size: 2.3rem;
       }
 
-      /* Ubah Ring Binder Jadi Horisontal di Atas */
-      .binder-spine {
+      .banner-speech {
+        display: none;
+      }
+
+      .dossier-card {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .art-panel {
+        height: 180px;
+      }
+
+      .art-icon {
+        font-size: 4.5rem;
+      }
+
+      .dossier-project-title {
+        font-size: 2rem;
+      }
+
+      .btn-receive-realm {
         width: 100%;
-        height: 35px;
-        flex-direction: row;
-        padding: 0 20px;
+        justify-content: center;
       }
 
-      .ring {
-        width: 14px;
-        height: 45px;
-      }
-
-      .page-left {
-        border-right: none;
-        border-bottom: 2px dashed #b5ae9e;
-        padding-bottom: 30px;
-      }
-
-      .project-grid {
-        grid-template-columns: 1fr; /* 1 Kolom di HP */
-      }
-
-      .polaroid-card:nth-child(even),
-      .polaroid-card:nth-child(odd) {
-        transform: rotate(0deg); /* Ratakan posisi kartu di layar kecil */
-      }
-
-      .stamp {
-        position: relative;
-        bottom: auto;
-        left: auto;
-        display: inline-block;
-        margin-top: 15px;
+      .bottom-bar {
+        flex-direction: column;
+        align-items: stretch;
       }
     }
   </style>
 </head>
 <body>
 
-  <div class="yearbook-wrapper">
-    
-    <!-- Halaman Kiri: Overview & Personal ID -->
-    <div class="page page-left">
-      <div>
-        <span class="header-badge">CLASSIFIED LABS</span>
-        <h1 class="title">MINIPROJECT BOOK</h1>
-        <p class="subtitle">F.O.S. MILITARY COMMAND COLLEGE DIRECTORY</p>
+  <div class="game-viewport">
+
+    <!-- Top Anime / Manga Collage Header Banner -->
+    <header class="manga-header">
+      <div class="banner-content">
+        <div class="banner-title-box">
+          <div class="manga-badge-tag">CLASSIFIED DOSSIER</div>
+          <h1 class="manga-title">F.O.S. <span>LABS</span></h1>
+          <p class="manga-subtitle">EXPERIMENT YEARBOOK & DIRECTORY</p>
+        </div>
+        <div class="banner-speech">
+          WHA-?! LEVEL UP YOUR DOSSIER!
+        </div>
+      </div>
+    </header>
+
+    <!-- Skewed Mode Selector Tabs -->
+    <nav class="nav-tabs-container">
+      <button class="nav-tab active" onclick="switchMode('dossier')">
+        <div class="tab-inner"><i class="fa-solid fa-folder-open"></i> DOSSIER</div>
+      </button>
+      <button class="nav-tab" onclick="switchMode('request')">
+        <div class="tab-inner"><i class="fa-solid fa-scroll"></i> REQUEST</div>
+      </button>
+      <button class="nav-tab" onclick="switchMode('dispatch')">
+        <div class="tab-inner"><i class="fa-solid fa-paper-plane"></i> DISPATCH</div>
+      </button>
+      <button class="nav-tab" onclick="switchMode('level')">
+        <div class="tab-inner"><i class="fa-solid fa-bolt"></i> LEVEL</div>
+      </button>
+    </nav>
+
+    <main class="main-stage">
+      <div class="main-stage-bg"></div>
+
+      <!-- Stage Top Header Bar -->
+      <div class="stage-header">
+        <div class="stage-header-title">
+          <i class="fa-solid fa-microchip"></i> MOONLIGHT EXPRESS B612 / EXPERIMENT SYSTEM
+        </div>
+        <div class="buff-badge">
+          BUFF INFORMATION ACTIVE
+        </div>
       </div>
 
-      <!-- ID Card Style Frame -->
-      <div class="id-card-frame">
-        <div class="id-card-header">
-          <div class="avatar-box">🚀</div>
-          <div class="id-info">
-            <h3>EXPERIMENTAL LABS</h3>
-            <p>STATUS: ACTIVE / DEPLOYED</p>
-            <p>TECH: JS / CANVAS </p>
+      <!-- Dossier Project Cards Container -->
+      <div class="content-viewport">
+
+        <!-- Project 1: Tata Surya -->
+        <article class="dossier-card active" data-page="1">
+          <div class="art-panel">
+            <div class="art-panel-screentone"></div>
+            <div class="art-icon">🪐</div>
+            <div class="art-caption">ORBITAL PHYSICS SIM</div>
+          </div>
+          <div class="info-panel">
+            <span class="dossier-number-tag">MEMBERSHIP LEVEL 1</span>
+            <h2 class="dossier-project-title">TATA SURYA 2D</h2>
+            <div class="tech-pill">
+              <i class="fa-solid fa-code"></i> TECH: CANVAS / PHYSICS
+            </div>
+            <p class="dossier-desc">
+              Simulasi matematika gerakan orkestrasi orbit planet 2D dan hukum gravitasi tata surya interaktif berbasis web canvas.
+            </p>
+            <div class="level-speech-bubbles">
+              <span class="bubble-node active" onclick="goToPage(1)">LV 1</span>
+              <span class="bubble-node" onclick="goToPage(2)">LV 2</span>
+              <span class="bubble-node" onclick="goToPage(3)">LV 3</span>
+              <span class="bubble-node" onclick="goToPage(4)">LV 4</span>
+              <span class="bubble-node" onclick="goToPage(5)">LV 5</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Project 2: Camera Gesture -->
+        <article class="dossier-card" data-page="2">
+          <div class="art-panel">
+            <div class="art-panel-screentone"></div>
+            <div class="art-icon">📷</div>
+            <div class="art-caption">GESTURE DETECTION AI</div>
+          </div>
+          <div class="info-panel">
+            <span class="dossier-number-tag">MEMBERSHIP LEVEL 2</span>
+            <h2 class="dossier-project-title">CAMERA GESTURE</h2>
+            <div class="tech-pill">
+              <i class="fa-solid fa-robot"></i> TECH: MEDIAPIPE / AI
+            </div>
+            <p class="dossier-desc">
+              Pengenalan pola gestur wajah & kontrol kursor kamera menggunakan Computer Vision AI secara real-time.
+            </p>
+            <div class="level-speech-bubbles">
+              <span class="bubble-node" onclick="goToPage(1)">LV 1</span>
+              <span class="bubble-node active" onclick="goToPage(2)">LV 2</span>
+              <span class="bubble-node" onclick="goToPage(3)">LV 3</span>
+              <span class="bubble-node" onclick="goToPage(4)">LV 4</span>
+              <span class="bubble-node" onclick="goToPage(5)">LV 5</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Project 3: Hand Tracking -->
+        <article class="dossier-card" data-page="3">
+          <div class="art-panel">
+            <div class="art-panel-screentone"></div>
+            <div class="art-icon">✋</div>
+            <div class="art-caption">JOINTS LANDMARK TRACKING</div>
+          </div>
+          <div class="info-panel">
+            <span class="dossier-number-tag">MEMBERSHIP LEVEL 3</span>
+            <h2 class="dossier-project-title">HAND TRACKING</h2>
+            <div class="tech-pill">
+              <i class="fa-solid fa-eye"></i> TECH: COMPUTER VISION
+            </div>
+            <p class="dossier-desc">
+              Pelacakan visual sendi dan koordinat landmark struktur jari tangan manusia menggunakan modul deteksi kamera.
+            </p>
+            <div class="level-speech-bubbles">
+              <span class="bubble-node" onclick="goToPage(1)">LV 1</span>
+              <span class="bubble-node" onclick="goToPage(2)">LV 2</span>
+              <span class="bubble-node active" onclick="goToPage(3)">LV 3</span>
+              <span class="bubble-node" onclick="goToPage(4)">LV 4</span>
+              <span class="bubble-node" onclick="goToPage(5)">LV 5</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Project 4: Cosmic Flower -->
+        <article class="dossier-card" data-page="4">
+          <div class="art-panel">
+            <div class="art-panel-screentone"></div>
+            <div class="art-icon">🌸</div>
+            <div class="art-caption">GENERATIVE ART MATH</div>
+          </div>
+          <div class="info-panel">
+            <span class="dossier-number-tag">MEMBERSHIP LEVEL 4</span>
+            <h2 class="dossier-project-title">COSMIC FLOWER</h2>
+            <div class="tech-pill">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> TECH: MATH ART / CANVAS
+            </div>
+            <p class="dossier-desc">
+              Visualisasi algoritma matematika generatif bunga mekar yang dipadukan dengan simulasi partikel kosmik interaktif.
+            </p>
+            <div class="level-speech-bubbles">
+              <span class="bubble-node" onclick="goToPage(1)">LV 1</span>
+              <span class="bubble-node" onclick="goToPage(2)">LV 2</span>
+              <span class="bubble-node" onclick="goToPage(3)">LV 3</span>
+              <span class="bubble-node active" onclick="goToPage(4)">LV 4</span>
+              <span class="bubble-node" onclick="goToPage(5)">LV 5</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- Project 5: Pose Reference Camera -->
+        <article class="dossier-card" data-page="5">
+          <div class="art-panel">
+            <div class="art-panel-screentone"></div>
+            <div class="art-icon">📸</div>
+            <div class="art-caption">POSE OVERLAY CAMERA</div>
+          </div>
+          <div class="info-panel">
+            <span class="dossier-number-tag">MEMBERSHIP LEVEL 5</span>
+            <h2 class="dossier-project-title">POSE CAMERA</h2>
+            <div class="tech-pill">
+              <i class="fa-solid fa-camera"></i> TECH: WEBRTC / OPACITY
+            </div>
+            <p class="dossier-desc">
+              Aplikasi kamera pemandu pose fotografi dengan fitur overlay gambar referensi transparan, pengatur slider opacity, dan modul pengambilan foto mirror.
+            </p>
+            <div class="level-speech-bubbles">
+              <span class="bubble-node" onclick="goToPage(1)">LV 1</span>
+              <span class="bubble-node" onclick="goToPage(2)">LV 2</span>
+              <span class="bubble-node" onclick="goToPage(3)">LV 3</span>
+              <span class="bubble-node" onclick="goToPage(4)">LV 4</span>
+              <span class="bubble-node active" onclick="goToPage(5)">LV 5</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+      <div class="bottom-bar">
+        <div class="exp-container">
+          <div class="exp-label-row">
+            <span id="expLevelText"><i class="fa-solid fa-shield-halved"></i> LEVEL 1 EXPERIMENT</span>
+            <span id="expProgressText">1/5 DOSSIERS</span>
+          </div>
+          <div class="exp-bar-bg">
+            <div class="exp-bar-fill" id="expFill" style="width: 20%;"></div>
           </div>
         </div>
+
+        <!-- Large Action Launch Button -->
+        <button class="btn-receive-realm" onclick="launchCurrentRealm()">
+          <span class="btn-text"><i class="fa-solid fa-play"></i> ACCESS REALM</span>
+        </button>
+      </div>
+    </main>
+
+    <footer class="controls-footer">
+      <button class="btn-back-next" id="btnPrev" onclick="changePage(-1)">
+        <div class="inner"><i class="fa-solid fa-chevron-left"></i> BACK</div>
+      </button>
+
+      <div class="page-counter-badge" id="pageBadge">
+        DOSSIER 1 / 5
       </div>
 
-      <p style="font-size: 0.8rem; line-height: 1.5; color: #444; margin-bottom: 20px;">
-        Dokumentasi resmi seluruh eksperimen komputasi visual, simulasi astronomi, dan pengenalan pola gestur berbasis Computer Vision.
-      </p>
-
-      <div class="stamp">PASSED & APPROVED</div>
-
-      <div class="handwritten-note">
-        "Congratulations on completing these experiments! Stay safe and keep building." — Director
-      </div>
-    </div>
-
-    <!-- Engsel Ring Binder -->
-    <div class="binder-spine">
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="ring"></div>
-      <div class="ring"></div>
-    </div>
-
-    <!-- Halaman Kanan: Direktori Proyek -->
-    <div class="page page-right">
-      <div class="section-title">
-        <span>DIRECTORY INDEX</span>
-        <span style="font-size: 0.75rem; color: var(--red-accent);">[ 4 ITEMS ]</span>
-      </div>
-
-      <div class="project-grid">
-        
-        <!-- Item 1: Tata Surya -->
-        <div class="polaroid-card">
-          <div class="tape"></div>
-          <div class="card-media">🪐</div>
-          <div class="card-caption">01. TATASURYA</div>
-          <div class="card-desc">Simulasi orkestrasi orbit planet 2D & sistem matematika tata surya.</div>
-          <button class="btn-action" onclick="openModal('pages/tatasurya.html')">OPEN DOSSIER</button>
-        </div>
-
-        <!-- Item 2: Camera AI -->
-        <div class="polaroid-card">
-          <div class="tape"></div>
-          <div class="card-media">📷</div>
-          <div class="card-caption">02. CAMERA GESTURE</div>
-          <div class="card-desc">Deteksi gestur wajah & kursor kamera berbasis MediaPipe AI.</div>
-          <button class="btn-action" onclick="openModal('pages/camera.html')">OPEN DOSSIER</button>
-        </div>
-
-        <!-- Item 3: Hand Tracking -->
-        <div class="polaroid-card">
-          <div class="tape"></div>
-          <div class="card-media">✋</div>
-          <div class="card-caption">03. HAND TRACKING</div>
-          <div class="card-desc">Pelacakan landmark sendi dan struktur jari tangan interaktif.</div>
-          <button class="btn-action" onclick="openModal('pages/tngn.html')">OPEN DOSSIER</button>
-        </div>
-
-        <!-- Item 4: Cosmic Flower -->
-        <div class="polaroid-card">
-          <div class="tape"></div>
-          <div class="card-media">🌸</div>
-          <div class="card-caption">04. COSMIC FLOWER</div>
-          <div class="card-desc">Visualisasi algoritma generatif bunga mekarnya canvas & partikel.</div>
-          <button class="btn-action" onclick="openModal('pages/bunga.html')">OPEN DOSSIER</button>
-        </div>
-
-      </div>
-    </div>
+      <button class="btn-back-next" id="btnNext" onclick="changePage(1)">
+        <div class="inner">NEXT <i class="fa-solid fa-chevron-right"></i></div>
+      </button>
+    </footer>
 
   </div>
 
-  <!-- Live Modal Preview -->
-  <div class="modal-overlay" id="previewModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeModal()">✕ CLOSE</button>
-      <iframe id="previewFrame" src=""></iframe>
+  <div class="modal-overlay" id="realmModal">
+    <div class="modal-game-frame">
+      <div class="modal-header">
+        <div class="modal-title-text" id="modalTitle">
+          <i class="fa-solid fa-gamepad"></i> PROJECT REALM
+        </div>
+        <div class="modal-actions">
+          <button class="btn-modal" onclick="toggleFullscreen()">
+            <i class="fa-solid fa-expand"></i> FULLSCREEN
+          </button>
+          <button class="btn-modal btn-modal-close" onclick="closeRealm()">
+            <i class="fa-solid fa-xmark"></i> CLOSE
+          </button>
+        </div>
+      </div>
+      <div class="modal-iframe-box">
+        <iframe id="realmIframe" src=""></iframe>
+      </div>
     </div>
   </div>
 
   <script>
-    function openModal(url) {
-      document.getElementById('previewFrame').src = url;
-      document.getElementById('previewModal').style.display = 'flex';
+    let currentPage = 1;
+    const totalPages = 5;
+
+    // List of URLs matching each project page
+    const realmUrls = [
+      { url: 'pages/tatasurya.html', title: '01. TATA SURYA 2D SIMULATION' },
+      { url: 'pages/fotokitablur.html', title: '02. CAMERA GESTURE AI' },
+      { url: 'pages/handtraking.html', title: '03. HAND TRACKING EXPERIMENT' },
+      { url: 'pages/bunga.html', title: '04. COSMIC FLOWER GENERATOR' },
+      { url: 'pages/posecamera.html', title: '05. POSE REFERENCE CAMERA' }
+    ];
+
+    // Function to change page
+    function changePage(direction) {
+      const newPage = currentPage + direction;
+      if (newPage >= 1 && newPage <= totalPages) {
+        goToPage(newPage);
+      }
     }
 
-    function closeModal() {
-      document.getElementById('previewModal').style.display = 'none';
-      document.getElementById('previewFrame').src = '';
+    // Function to jump directly to a page
+    function goToPage(pageNumber) {
+      document.querySelector(`.dossier-card[data-page="${currentPage}"]`).classList.remove('active');
+      currentPage = pageNumber;
+      document.querySelector(`.dossier-card[data-page="${currentPage}"]`).classList.add('active');
+
+      // Update UI components
+      updateUI();
     }
+
+    // Update UI Badges, Progress bar, and Prev/Next buttons
+    function updateUI() {
+      // Update Page counter badge
+      document.getElementById('pageBadge').innerText = `DOSSIER ${currentPage} / ${totalPages}`;
+
+      // Update Progress Bar
+      const percentage = (currentPage / totalPages) * 100;
+      document.getElementById('expFill').style.width = `${percentage}%`;
+      document.getElementById('expLevelText').innerHTML = `<i class="fa-solid fa-shield-halved"></i> LEVEL ${currentPage} EXPERIMENT`;
+      document.getElementById('expProgressText').innerText = `${currentPage}/${totalPages} DOSSIERS`;
+
+      // Disable/Enable Back and Next buttons
+      document.getElementById('btnPrev').disabled = (currentPage === 1);
+      document.getElementById('btnNext').disabled = (currentPage === totalPages);
+    }
+
+    // Launch active project inside full modal
+    function launchCurrentRealm() {
+      const activeProject = realmUrls[currentPage - 1];
+      document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-gamepad"></i> ${activeProject.title}`;
+      document.getElementById('realmIframe').src = activeProject.url;
+      document.getElementById('realmModal').style.display = 'flex';
+    }
+
+    // Close Realm Modal
+    function closeRealm() {
+      document.getElementById('realmModal').style.display = 'none';
+      document.getElementById('realmIframe').src = '';
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    }
+
+    // Fullscreen Toggle
+    function toggleFullscreen() {
+      const modal = document.getElementById('realmModal');
+      if (!document.fullscreenElement) {
+        if (modal.requestFullscreen) {
+          modal.requestFullscreen();
+        } else if (modal.webkitRequestFullscreen) {
+          modal.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    // Top Header Navigation Tab Selector Simulation
+    function switchMode(modeName) {
+      const tabs = document.querySelectorAll('.nav-tab');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+    }
+
+    // Keyboard Arrow Key Navigation
+    document.addEventListener('keydown', (e) => {
+      // Only navigate if modal is closed
+      if (document.getElementById('realmModal').style.display !== 'flex') {
+        if (e.key === 'ArrowRight') changePage(1);
+        if (e.key === 'ArrowLeft') changePage(-1);
+      } else {
+        if (e.key === 'Escape') closeRealm();
+      }
+    });
+
+    // Initial setup on load
+    window.onload = function() {
+      updateUI();
+    };
   </script>
 </body>
 </html>

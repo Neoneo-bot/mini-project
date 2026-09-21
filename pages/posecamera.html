@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pose Reference Camera</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #121318;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        h1 {
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #ece7db;
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 3/4; /* Aspek rasio standar kamera HP */
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror secara bawaan */
+        }
+
+        #video.no-mirror {
+            transform: scaleX(1); /* Hilangkan mirror untuk kamera belakang */
+        }
+
+        #overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+            opacity: 0.5;
+            pointer-events: none;
+            border: 2px dashed rgba(255,255,255,0.4);
+            object-fit: contain;
+        }
+
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        button, .file-input-label {
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+        }
+
+        button:hover, .file-input-label:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .slider-container {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            font-size: 12px;
+        }
+
+        input[type="range"] {
+            width: 70px;
+            cursor: pointer;
+        }
+
+        .bottom-controls {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            z-index: 10;
+        }
+
+        #captureBtn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid rgba(255,255,255,0.4);
+            cursor: pointer;
+            padding: 0;
+        }
+
+        #captureBtn:active {
+            transform: scale(0.9);
+        }
+
+        #switchCamBtn {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.75);
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-align: center;
+            z-index: 5;
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #photoPreview {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        #photoPreview img {
+            max-width: 100%;
+            max-height: 75vh;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .close-preview {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #d93838;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* MEDIA QUERIES KHUSUS HP (MODE POTRET) */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            h1 {
+                font-size: 1rem;
+                margin-bottom: 8px;
+            }
+
+            .container {
+                max-width: 100%;
+                border-radius: 8px;
+            }
+
+            .controls {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            input[type="range"] {
+                width: 50px;
+            }
+
+            button, .file-input-label {
+                font-size: 11px;
+                padding: 5px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📸 Pose Reference Camera</h1>
+    
+    <div class="container">
+        <video id="video" autoplay playsinline></video>
+        <img id="overlay" class="hidden">
+        
+        <div class="message" id="startMessage">
+            <p>Upload Foto Referensi Pose</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label class="file-input-label">
+                    📁 Upload
+                    <input type="file" id="photoInput" accept="image/*">
+                </label>
+            </div>
+            <div class="control-group slider-container">
+                <span>🔍</span>
+                <input type="range" id="opacitySlider" min="0" max="100" value="50">
+                <span id="opacityValue">50%</span>
+            </div>
+        </div>
+
+        <div class="bottom-controls">
+            <button id="switchCamBtn" title="Ganti Kamera">🔄</button>
+            <button id="captureBtn" title="Ambil Foto"></button>
+        </div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div id="photoPreview">
+        <button class="close-preview" onclick="closePreview()">✕ Tutup</button>
+        <img id="previewImg">
+        <a id="downloadLink" download="pose-photo.png">
+            <button style="background: #ffffff; color: #000; font-weight: bold;">💾 Simpan Foto</button>
+        </a>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const overlay = document.getElementById('overlay');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const photoInput = document.getElementById('photoInput');
+        const opacitySlider = document.getElementById('opacitySlider');
+        const opacityValue = document.getElementById('opacityValue');
+        const captureBtn = document.getElementById('captureBtn');
+        const switchCamBtn = document.getElementById('switchCamBtn');
+        const startMessage = document.getElementById('startMessage');
+        const photoPreview = document.getElementById('photoPreview');
+        const previewImg = document.getElementById('previewImg');
+        const downloadLink = document.getElementById('downloadLink');
+
+        let currentStream = null;
+        let useUserCamera = true; // true = Kamera Depan, false = Kamera Belakang
+
+        async function startCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            const constraints = {
+                video: {
+                    facingMode: useUserCamera ? 'user' : 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = currentStream;
+                
+                // Atur efek mirror (kamera depan di-mirror, kamera belakang tidak)
+                if (useUserCamera) {
+                    video.classList.remove('no-mirror');
+                } else {
+                    video.classList.add('no-mirror');
+                }
+            } catch (err) {
+                alert('Gagal mengakses kamera: ' + err.message);
+            }
+        }
+
+        // Fitur Switch Kamera Depan/Belakang
+        switchCamBtn.addEventListener('click', () => {
+            useUserCamera = !useUserCamera;
+            startCamera();
+        });
+
+        // Handle Upload Foto
+        photoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    overlay.src = event.target.result;
+                    overlay.classList.remove('hidden');
+                    startMessage.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle Opacity Slider
+        opacitySlider.addEventListener('input', (e) => {
+            const value = e.target.value;
+            overlay.style.opacity = value / 100;
+            opacityValue.textContent = value + '%';
+        });
+
+        // Ambil Foto (Capture)
+        captureBtn.addEventListener('click', () => {
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+
+            if (useUserCamera) {
+                // Flip horizontal jika kamera depan
+                ctx.translate(canvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                previewImg.src = url;
+                downloadLink.href = url;
+                photoPreview.style.display = 'flex';
+            }, 'image/png');
+        });
+
+        function closePreview() {
+            photoPreview.style.display = 'none';
+        }
+
+        window.addEventListener('load', startCamera);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && photoPreview.style.display !== 'flex') {
+                e.preventDefault();
+                captureBtn.click();
+            }
+            if (e.code === 'Escape') {
+                closePreview();
+            }
+        });
+    </script>
+</body>
+</html>
