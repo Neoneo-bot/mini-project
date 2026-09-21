@@ -175,13 +175,22 @@
       width: 0;
     }
 
+    /* Nav Tabs Container - Mobile Touch Scroll Friendly */
     .nav-tabs-container {
       display: flex;
       gap: 12px;
       margin-bottom: -4px;
       z-index: 10;
       padding-left: 10px;
-      flex-wrap: wrap;
+      padding-right: 10px;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .nav-tabs-container::-webkit-scrollbar {
+      display: none;
     }
 
     .nav-tab {
@@ -197,6 +206,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       box-shadow: 3px -3px 0 rgba(0,0,0,0.5);
+      flex-shrink: 0;
     }
 
     .nav-tab .tab-inner {
@@ -332,7 +342,6 @@
       transform: rotate(0deg) scale(1.01);
     }
 
-    /* Halftone pattern inside art panel */
     .art-panel-screentone {
       position: absolute;
       inset: 0;
@@ -426,7 +435,6 @@
       position: relative;
     }
 
-    /* Manga speech node buttons for level selection look */
     .level-speech-bubbles {
       display: flex;
       gap: 8px;
@@ -590,15 +598,16 @@
       box-shadow: 3px 3px 0 var(--red-accent);
     }
 
+    /* Modal Overlay - 100% Fullscreen Support */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(12, 13, 16, 0.95);
+      background: rgba(12, 13, 16, 0.98);
       backdrop-filter: blur(8px);
       z-index: 1000;
       display: none;
       flex-direction: column;
-      padding: 20px;
+      padding: 0; /* Ubah ke 0 agar iframe dapat menggunakan 100% layar secara penuh */
       animation: modalFade 0.25s ease forwards;
     }
 
@@ -609,28 +618,31 @@
 
     .modal-game-frame {
       flex: 1;
+      width: 100vw;
+      height: 100vh;
       background: #16181f;
-      border: 4px solid #000;
-      box-shadow: 0 0 30px rgba(255, 42, 75, 0.4);
+      border: none;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      border-radius: 6px;
+      position: relative;
     }
 
     .modal-header {
-      height: 60px;
+      height: 55px;
       background: #0c0d10;
-      border-bottom: 4px solid #000;
+      border-bottom: 3px solid #000;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 20px;
+      padding: 0 15px;
+      z-index: 10;
+      transition: all 0.3s ease;
     }
 
     .modal-title-text {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       letter-spacing: 2px;
       color: var(--yellow-accent);
       display: flex;
@@ -640,7 +652,7 @@
 
     .modal-actions {
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
 
     .btn-modal {
@@ -650,7 +662,7 @@
       font-size: 1.1rem;
       letter-spacing: 1px;
       border: 2px solid #000;
-      padding: 6px 16px;
+      padding: 6px 14px;
       cursor: pointer;
       box-shadow: 3px 3px 0 #000;
       transition: all 0.2s ease;
@@ -674,21 +686,97 @@
       width: 100%;
       height: 100%;
       background: #000;
+      position: relative;
     }
 
     iframe {
       width: 100%;
       height: 100%;
       border: none;
+      display: block;
     }
 
+    /* FULLSCREEN CSS OVERRIDES (Sembunyikan Judul & Buat Tombol Overlay Melayang saat 100% Fullscreen) */
+    :fullscreen .modal-header,
+    :-webkit-full-screen .modal-header,
+    .modal-overlay.is-fullscreen .modal-header {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      left: auto;
+      background: rgba(12, 13, 16, 0.85);
+      backdrop-filter: blur(6px);
+      border: 2px solid var(--red-accent);
+      border-radius: 8px;
+      height: auto;
+      padding: 6px 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+    }
+
+    :fullscreen .modal-title-text,
+    :-webkit-full-screen .modal-title-text,
+    .modal-overlay.is-fullscreen .modal-title-text {
+      display: none !important; /* Sembunyikan judul proyek agar iframe 100% bersih */
+    }
+
+    :fullscreen .modal-iframe-box,
+    :-webkit-full-screen .modal-iframe-box,
+    .modal-overlay.is-fullscreen .modal-iframe-box {
+      position: absolute;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Responsive Mobile Portrait Mode (HP) */
     @media (max-width: 768px) {
+      .game-viewport {
+        padding: 10px;
+      }
+
+      .manga-header {
+        margin-bottom: 12px;
+      }
+
+      .banner-content {
+        padding: 15px 18px;
+      }
+
       .manga-title {
         font-size: 2.3rem;
       }
 
+      .manga-subtitle {
+        font-size: 1.1rem;
+      }
+
       .banner-speech {
         display: none;
+      }
+
+      .nav-tab {
+        font-size: 1.1rem;
+        padding: 6px 16px;
+      }
+
+      .stage-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px 15px;
+      }
+
+      .stage-header-title {
+        font-size: 1.1rem;
+      }
+
+      .buff-badge {
+        font-size: 0.95rem;
+        padding: 2px 8px;
+      }
+
+      .content-viewport {
+        padding: 15px;
       }
 
       .dossier-card {
@@ -705,17 +793,68 @@
       }
 
       .dossier-project-title {
-        font-size: 2rem;
+        font-size: 2.1rem;
+      }
+
+      .dossier-desc {
+        font-size: 0.88rem;
+        padding: 12px;
+      }
+
+      .level-speech-bubbles {
+        gap: 6px;
+      }
+
+      .bubble-node {
+        font-size: 0.9rem;
+        padding: 4px 10px;
+      }
+
+      .bottom-bar {
+        padding: 12px 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
       }
 
       .btn-receive-realm {
         width: 100%;
         justify-content: center;
+        font-size: 1.5rem;
+        padding: 10px 20px;
       }
 
-      .bottom-bar {
-        flex-direction: column;
-        align-items: stretch;
+      .controls-footer {
+        margin-top: 10px;
+        gap: 5px;
+      }
+
+      .btn-back-next {
+        font-size: 1.1rem;
+        padding: 6px 12px;
+      }
+
+      .page-counter-badge {
+        font-size: 1.1rem;
+        padding: 5px 12px;
+      }
+
+      .modal-header {
+        padding: 0 10px;
+        height: 50px;
+      }
+
+      .modal-title-text {
+        font-size: 1.1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 50vw;
+      }
+
+      .btn-modal {
+        font-size: 0.95rem;
+        padding: 4px 8px;
       }
     }
   </style>
@@ -1016,24 +1155,44 @@
     function closeRealm() {
       document.getElementById('realmModal').style.display = 'none';
       document.getElementById('realmIframe').src = '';
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
       }
+      document.getElementById('realmModal').classList.remove('is-fullscreen');
     }
 
     // Fullscreen Toggle
     function toggleFullscreen() {
       const modal = document.getElementById('realmModal');
-      if (!document.fullscreenElement) {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
         if (modal.requestFullscreen) {
           modal.requestFullscreen();
         } else if (modal.webkitRequestFullscreen) {
           modal.webkitRequestFullscreen();
         }
+        modal.classList.add('is-fullscreen');
       } else {
         if (document.exitFullscreen) {
           document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
         }
+        modal.classList.remove('is-fullscreen');
+      }
+    }
+
+    // Detect when user exits Fullscreen via ESC or swipe
+    document.addEventListener('fullscreenchange', handleFullscreenExit);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenExit);
+
+    function handleFullscreenExit() {
+      const modal = document.getElementById('realmModal');
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        modal.classList.remove('is-fullscreen');
       }
     }
 
