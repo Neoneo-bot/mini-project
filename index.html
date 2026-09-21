@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F.O.S. Experiment Dossier & Yearbook</title>
+  <style>
+    :root {
+      --bg-desk: #121318;
+      --paper-bg: #ece7db;
+      --paper-grid: #ded8c8;
+      --ink-color: #2b2b2b;
+      --red-accent: #d93838;
+      --tech-card-bg: #1c1d22;
+      --border-color: #383940;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Courier New', Courier, monospace, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-desk);
+      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 20px 20px;
+      color: var(--ink-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 10px;
+    }
+
+    /* Container Utama Binder/Buku */
+    .yearbook-wrapper {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--paper-bg);
+      background-image: 
+        linear-gradient(var(--paper-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--paper-grid) 1px, transparent 1px);
+      background-size: 16px 16px;
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 100px rgba(0, 0, 0, 0.05);
+      border: 2px solid #3a3630;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Engsel Ring Binder (Tengah di Desktop) */
+    .binder-spine {
+      width: 40px;
+      background: #222;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      padding: 30px 0;
+      z-index: 10;
+      box-shadow: inset -3px 0 5px rgba(0,0,0,0.5), inset 3px 0 5px rgba(0,0,0,0.5);
+    }
+
+    .ring {
+      width: 50px;
+      height: 14px;
+      background: linear-gradient(180deg, #888, #fff, #444);
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+    }
+
+    /* Halaman Kiri & Kanan */
+    .page {
+      flex: 1;
+      padding: 35px 30px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Halaman Kiri: Profil & Header */
+    .page-left {
+      border-right: 1px dashed #b5ae9e;
+    }
+
+    .header-badge {
+      display: inline-block;
+      border: 2px solid var(--red-accent);
+      color: var(--red-accent);
+      padding: 4px 8px;
+      font-weight: bold;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      width: fit-content;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+    }
+
+    h1.title {
+      font-family: 'Arial Black', Impact, sans-serif;
+      font-size: 2.2rem;
+      line-height: 1;
+      color: #1a1a1a;
+      letter-spacing: -1px;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #666;
+      border-bottom: 2px solid #1a1a1a;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    /* ID Card Tablet Frame (Elemen Tech) */
+    .id-card-frame {
+      background: var(--tech-card-bg);
+      border-radius: 10px;
+      padding: 15px;
+      color: #fff;
+      position: relative;
+      margin-bottom: 25px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .id-card-frame::before {
+      content: "OFFICIAL DOSSIER";
+      position: absolute;
+      top: -10px;
+      right: 15px;
+      background: var(--red-accent);
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      font-weight: bold;
+    }
+
+    .id-card-header {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .avatar-box {
+      width: 70px;
+      height: 70px;
+      background: #333;
+      border: 2px solid #555;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.8rem;
+    }
+
+    .id-info h3 {
+      font-size: 1.1rem;
+      color: #00f0ff;
+      margin-bottom: 4px;
+    }
+
+    .id-info p {
+      font-size: 0.75rem;
+      color: #aaa;
+    }
+
+    /* Stempel & Aksesoris Scrapbook */
+    .stamp {
+      position: absolute;
+      bottom: 20px;
+      left: 30px;
+      border: 3px double var(--red-accent);
+      color: var(--red-accent);
+      padding: 5px 12px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      transform: rotate(-12deg);
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    /* Halaman Kanan: Grid Proyek */
+    .page-right {
+      position: relative;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-bottom: 1px solid #1a1a1a;
+      padding-bottom: 5px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    /* Card Proyek Style Polaroid */
+    .polaroid-card {
+      background: #fff;
+      padding: 10px 10px 15px 10px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .polaroid-card:nth-child(even) {
+      transform: rotate(1.5deg);
+    }
+    .polaroid-card:nth-child(odd) {
+      transform: rotate(-1.5deg);
+    }
+
+    .polaroid-card:hover {
+      transform: scale(1.04) rotate(0deg) !important;
+      z-index: 5;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+    }
+
+    /* Efek Solasi di Atas Polaroid */
+    .tape {
+      position: absolute;
+      top: -10px;
+      left: 30%;
+      width: 50px;
+      height: 18px;
+      background: rgba(240, 230, 200, 0.6);
+      border: 1px solid rgba(200, 190, 150, 0.5);
+      transform: rotate(-3deg);
+    }
+
+    .card-media {
+      height: 100px;
+      background: #1e1e24;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      border: 1px solid #eee;
+    }
+
+    .card-caption {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #222;
+      margin-bottom: 4px;
+    }
+
+    .card-desc {
+      font-size: 0.7rem;
+      color: #666;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
+
+    .btn-action {
+      display: block;
+      width: 100%;
+      padding: 6px;
+      background: #2b2b2b;
+      color: #fff;
+      text-align: center;
+      font-size: 0.7rem;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-action:hover {
+      background: var(--red-accent);
+    }
+
+    /* Catatan Tangan di Bawah Halaman */
+    .handwritten-note {
+      margin-top: auto;
+      padding-top: 15px;
+      font-style: italic;
+      font-size: 0.8rem;
+      color: #444;
+      border-top: 1px dashed #b5ae9e;
+    }
+
+    /* Modal Live Preview */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+    }
+
+    .modal-content {
+      width: 100%;
+      max-width: 950px;
+      height: 85vh;
+      background: #111;
+      border-radius: 8px;
+      border: 2px solid #444;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: var(--red-accent);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ========================================== */
+    /* RESPONSIVE DESIGN (MOBILE & TABLET)        */
+    /* ========================================== */
+    @media (max-width: 850px) {
+      .yearbook-wrapper {
+        flex-direction: column;
+      }
+
+      /* Ubah Ring Binder Jadi Horisontal di Atas */
+      .binder-spine {
+        width: 100%;
+        height: 35px;
+        flex-direction: row;
+        padding: 0 20px;
+      }
+
+      .ring {
+        width: 14px;
+        height: 45px;
+      }
+
+      .page-left {
+        border-right: none;
+        border-bottom: 2px dashed #b5ae9e;
+        padding-bottom: 30px;
+      }
+
+      .project-grid {
+        grid-template-columns: 1fr; /* 1 Kolom di HP */
+      }
+
+      .polaroid-card:nth-child(even),
+      .polaroid-card:nth-child(odd) {
+        transform: rotate(0deg); /* Ratakan posisi kartu di layar kecil */
+      }
+
+      .stamp {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        display: inline-block;
+        margin-top: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="yearbook-wrapper">
+    
+    <!-- Halaman Kiri: Overview & Personal ID -->
+    <div class="page page-left">
+      <div>
+        <span class="header-badge">CLASSIFIED LABS</span>
+        <h1 class="title">MINIPROJECT BOOK</h1>
+        <p class="subtitle">F.O.S. MILITARY COMMAND COLLEGE DIRECTORY</p>
+      </div>
+
+      <!-- ID Card Style Frame -->
+      <div class="id-card-frame">
+        <div class="id-card-header">
+          <div class="avatar-box">🚀</div>
+          <div class="id-info">
+            <h3>EXPERIMENTAL LABS</h3>
+            <p>STATUS: ACTIVE / DEPLOYED</p>
+            <p>TECH: JS / CANVAS </p>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size: 0.8rem; line-height: 1.5; color: #444; margin-bottom: 20px;">
+        Dokumentasi resmi seluruh eksperimen komputasi visual, simulasi astronomi, dan pengenalan pola gestur berbasis Computer Vision.
+      </p>
+
+      <div class="stamp">PASSED & APPROVED</div>
+
+      <div class="handwritten-note">
+        "Congratulations on completing these experiments! Stay safe and keep building." — Director
+      </div>
+    </div>
+
+    <!-- Engsel Ring Binder -->
+    <div class="binder-spine">
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+    </div>
+
+    <!-- Halaman Kanan: Direktori Proyek -->
+    <div class="page page-right">
+      <div class="section-title">
+        <span>DIRECTORY INDEX</span>
+        <span style="font-size: 0.75rem; color: var(--red-accent);">[ 4 ITEMS ]</span>
+      </div>
+
+      <div class="project-grid">
+        
+        <!-- Item 1: Tata Surya -->
+        <div class="polaroid-card">
+          <div class="tape"></div>
+          <div class="card-media">🪐</div>
+          <div class="card-caption">01. TATASURYA</div>
+          <div class="card-desc">Simulasi orkestrasi orbit planet 2D & sistem matematika tata surya.</div>
+          <button class="btn-action" onclick="openModal('pages/tatasurya.html')">OPEN DOSSIER</button>
+        </div>
+
+        <!-- Item 2: Camera AI -->
+        <div class="polaroid-card">
+          <div class="tape"></div>
+          <div class="card-media">📷</div>
+          <div class="card-caption">02. CAMERA GESTURE</div>
+          <div class="card-desc">Deteksi gestur wajah & kursor kamera berbasis MediaPipe AI.</div>
+          <button class="btn-action" onclick="openModal('pages/camera.html')">OPEN DOSSIER</button>
+        </div>
+
+        <!-- Item 3: Hand Tracking -->
+        <div class="polaroid-card">
+          <div class="tape"></div>
+          <div class="card-media">✋</div>
+          <div class="card-caption">03. HAND TRACKING</div>
+          <div class="card-desc">Pelacakan landmark sendi dan struktur jari tangan interaktif.</div>
+          <button class="btn-action" onclick="openModal('pages/tngn.html')">OPEN DOSSIER</button>
+        </div>
+
+        <!-- Item 4: Cosmic Flower -->
+        <div class="polaroid-card">
+          <div class="tape"></div>
+          <div class="card-media">🌸</div>
+          <div class="card-caption">04. COSMIC FLOWER</div>
+          <div class="card-desc">Visualisasi algoritma generatif bunga mekarnya canvas & partikel.</div>
+          <button class="btn-action" onclick="openModal('pages/bunga.html')">OPEN DOSSIER</button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Live Modal Preview -->
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">✕ CLOSE</button>
+      <iframe id="previewFrame" src=""></iframe>
+    </div>
+  </div>
+
+  <script>
+    function openModal(url) {
+      document.getElementById('previewFrame').src = url;
+      document.getElementById('previewModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('previewModal').style.display = 'none';
+      document.getElementById('previewFrame').src = '';
+    }
+  </script>
+</body>
+</html>
