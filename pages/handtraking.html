@@ -3,218 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Gesture Particle Control - Firework Edition</title>
+    <title>3D Hand Gesture Particle Control - Firework & Angry Emoji Edition</title>
+    <!-- Tailwind CSS for UI Layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Three.js 3D Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- MediaPipe Hands & Camera Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #050505;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: #030712;
+            font-family: 'Inter', sans-serif;
+            color: #f3f4f6;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        /* Custom Glassmorphism UI Panels */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.15);
+        }
+        .glass-badge {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Webcam view frame with glow */
+        #webcam-container {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            z-index: 20;
+            transition: all 0.3s ease;
         }
         #webcam {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 180px;
-            height: 135px;
-            border: 2px solid #00ffcc;
-            border-radius: 8px;
-            transform: scaleX(-1);
-            z-index: 10;
-            background-color: #111;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+            width: 190px;
+            height: 142px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid #38bdf8;
+            transform: scaleX(-1); /* Mirror view for user comfort */
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+            background: #090d16;
         }
-        
-        /* HUD Guidance Overlay */
-        #hud-container {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #00ffcc;
-            background: rgba(10, 15, 20, 0.85);
-            border: 1px solid #00ffcc;
-            padding: 12px 15px;
-            border-radius: 8px;
-            z-index: 10;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
-            max-width: 320px;
-            user-select: none;
+        /* Active Gesture Badge Animation */
+        .gesture-active-pulse {
+            animation: pulseGlow 2s infinite ease-in-out;
         }
-        #hud-container h3 {
-            margin: 0;
-            font-size: 14px;
-            letter-spacing: 1px;
-            color: #fff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(56, 189, 248, 0.7); }
         }
-        #hud-toggle-btn {
-            background: rgba(0, 255, 204, 0.15);
-            border: 1px solid #00ffcc;
-            color: #00ffcc;
+        /* Custom Scrollbar for HUD */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.4);
             border-radius: 4px;
-            padding: 3px 8px;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 11px;
-            transition: all 0.2s ease;
-        }
-        #hud-toggle-btn:hover {
-            background: #00ffcc;
-            color: #000;
-        }
-        #hud-content {
-            margin-top: 10px;
-            border-top: 1px dashed rgba(0, 255, 204, 0.4);
-            padding-top: 10px;
-        }
-        .hud-item {
-            font-size: 12px;
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .hud-item span {
-            color: #fff;
-            font-weight: bold;
-        }
-
-        #error-msg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #ff4444;
-            background: rgba(0,0,0,0.9);
-            padding: 20px;
-            border: 2px solid #ff4444;
-            border-radius: 10px;
-            font-size: 16px;
-            display: none;
-            text-align: center;
-            z-index: 100;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 </head>
 <body>
+    <!-- Main WebGL 3D Canvas Container -->
+    <div id="canvas-container" class="absolute inset-0 z-0 cursor-grab active:cursor-grabbing"></div>
 
-    <div id="hud-container">
-        <h3>
-            <span>COMMANDS</span>
-            <button id="hud-toggle-btn" onclick="toggleHUD()">Sembunyikan</button>
-        </h3>
-        <div id="hud-content">
-            <div class="hud-item">✊ Genggam ➔ Buka Cepat: <span>🎆 PETASAN (FIREWORK)</span></div>
-            <div class="hud-item">🖐️ Buka Tangan: <span>Awan Partikel</span></div>
-            <div class="hud-item">✊ Genggam Tangan: <span>Hati 💓</span></div>
-            <div class="hud-item">☝️ 1 Jari (Telunjuk): <span>Planet Uranus 🪐</span></div>
-            <div class="hud-item">✌️ 2 Jari (Peace): <span>Teks I LOVE YOU</span></div>
-            <div class="hud-item" style="margin-top: 8px; color: #ffaa00;">🖐️ Geser Tangan = Rotasi 3D</div>
+    <!-- Top Left HUD Panel -->
+    <div id="hud-container" class="glass-panel absolute top-6 left-6 z-20 rounded-2xl p-5 max-w-sm w-full text-sm transition-all duration-300">
+        <!-- Header & Toggle -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-700/60">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+                <h1 class="font-bold text-base tracking-wide text-cyan-300">GESTURE CONTROL</h1>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button id="fullscreen-btn" onclick="toggleFullscreen()" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-950/80 hover:bg-emerald-800 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1" title="Tampilan Fullscreen Tanpa Overlay">
+                    <i class="fa-solid fa-expand"></i> Full Screen
+                </button>
+                <button id="hud-toggle-btn" onclick="toggleHUD()" class="text-xs px-2.5 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-800 text-cyan-300 border border-cyan-500/40 transition">
+                    <i class="fa-solid fa-chevron-up mr-1" id="hud-toggle-icon"></i> Sembunyikan
+                </button>
+            </div>
+        </div>
+
+        <!-- Feature Toggles (Zoom & Rotasi Tangan) -->
+        <div class="mt-3 p-3 rounded-xl bg-slate-900/80 border border-slate-700/80 space-y-2">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Pengaturan Fitur Gestur:</div>
+            <div class="flex items-center justify-between text-xs">
+                <span class="flex items-center gap-1.5 text-slate-300">
+                    <i class="fa-solid fa-arrows-rotate text-cyan-400"></i> Rotasi Gerak Tangan
+                </span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="toggle-rotation" checked onchange="toggleHandRotation(this.checked)" class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                </label>
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1.5 border-t border-slate-800/80">
+                <span class="flex items-center gap-1.5 text-slate-300">
+                    <i class="fa-solid fa-magnifying-glass-plus text-cyan-400"></i> Zoom Jarak Tangan
+                </span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="toggle-zoom" checked onchange="toggleHandZoom(this.checked)" class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Active Gesture Status Badge -->
+        <div class="mt-3 p-3 rounded-xl bg-slate-900/80 border border-slate-700/80 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Gestur Aktif:</span>
+            <div id="active-gesture-badge" class="flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                <span id="gesture-icon">☁️</span>
+                <span id="gesture-name">Awan Partikel</span>
+            </div>
+        </div>
+
+        <!-- Instructions & Commands Content -->
+        <div id="hud-content" class="mt-3 space-y-2 text-xs text-slate-300">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Daftar Kontrol Gestur Tangan:</div>
+            
+            <div class="hud-item flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:border-amber-500/50 transition">
+                <span class="font-medium">✊ Genggam Tangan</span>
+                <span class="text-amber-400 font-bold">😡 Stiker Marah</span>
+            </div>
+            <div class="hud-item flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:border-cyan-500/50 transition">
+                <span class="font-medium">✊ ➔ 🖐️ Buka Cepat</span>
+                <span class="text-yellow-300 font-bold">🎆 Petasan (Explosion)</span>
+            </div>
+            <div class="hud-item flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:border-sky-500/50 transition">
+                <span class="font-medium">🖐️ Buka Tangan</span>
+                <span class="text-sky-300 font-bold">☁️ Awan Partikel</span>
+            </div>
+            <div class="hud-item flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:border-teal-500/50 transition">
+                <span class="font-medium">☝️ 1 Jari (Telunjuk)</span>
+                <span class="text-teal-300 font-bold">🪐 Planet Uranus</span>
+            </div>
+            <div class="hud-item flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:border-pink-500/50 transition">
+                <span class="font-medium">✌️ 2 Jari (Peace)</span>
+                <span class="text-pink-400 font-bold">💖 Teks "I LOVE YOU"</span>
+            </div>
+            <div class="hud-item flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:border-purple-500/50 transition">
+                <span class="font-medium">🤟 3 Jari / Metal</span>
+                <span class="text-purple-400 font-bold">🌀 Galaksi Spiral</span>
+            </div>
+            <div class="hud-item flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:border-indigo-500/50 transition">
+                <span class="font-medium">🖐️↔️ Jarak Tangan</span>
+                <span class="text-indigo-300 font-bold">🔍 Zoom (Dekat / Jauh)</span>
+            </div>
+
+            <!-- Interactive Tip -->
+            <div class="mt-3 p-2 rounded-lg bg-cyan-950/40 border border-cyan-500/30 text-[11px] text-cyan-200 flex items-center gap-2">
+                <i class="fa-solid fa-hand-pointer text-cyan-400"></i>
+                <span><strong>Geser Tangan:</strong> Memutar objek 3D secara presisi sesuai gerak telapak tangan.</span>
+            </div>
+        </div>
+
+        <!-- Manual Quick Switch Buttons (Fallback) -->
+        <div class="mt-4 pt-3 border-t border-slate-700/60">
+            <div class="text-[11px] text-slate-400 mb-2">Manual Switch (Tombol Keyboard 1-5):</div>
+            <div class="grid grid-cols-5 gap-1.5">
+                <button onclick="setShapeManual(0)" class="p-1.5 text-center rounded bg-slate-800 hover:bg-cyan-600 text-xs transition" title="Awan">☁️</button>
+                <button onclick="setShapeManual(1)" class="p-1.5 text-center rounded bg-slate-800 hover:bg-amber-600 text-xs transition" title="Angry Emoji">😡</button>
+                <button onclick="setShapeManual(2)" class="p-1.5 text-center rounded bg-slate-800 hover:bg-teal-600 text-xs transition" title="Uranus">🪐</button>
+                <button onclick="setShapeManual(3)" class="p-1.5 text-center rounded bg-slate-800 hover:bg-pink-600 text-xs transition" title="Teks">💖</button>
+                <button onclick="setShapeManual(4)" class="p-1.5 text-center rounded bg-slate-800 hover:bg-purple-600 text-xs transition" title="Galaksi">🌀</button>
+            </div>
         </div>
     </div>
 
-    <div id="error-msg">⚠️ Kamera tidak terdeteksi atau izin akses kamera ditolak!<br>Mohon izinkan akses kamera pada browser Anda.</div>
+    <!-- Webcam Feed Widget -->
+    <div id="webcam-container" class="flex flex-col items-start gap-1">
+        <video id="webcam" autoplay playsinline muted></video>
+        <div class="flex items-center justify-between w-full px-1 text-[11px] text-slate-400">
+            <span id="camera-status" class="flex items-center gap-1.5">
+                <span id="camera-dot" class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <span id="camera-text">Menghubungkan kamera...</span>
+            </span>
+            <span class="code-font text-[10px] text-slate-500">ScaleX(-1)</span>
+        </div>
+    </div>
 
-    <video id="webcam" autoplay playsinline muted></video>
+    <!-- Camera Error / Fallback Notification Banner -->
+    <div id="error-msg" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 glass-panel p-6 rounded-2xl max-w-md text-center border-red-500/50 shadow-2xl">
+        <div class="text-red-400 text-4xl mb-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h2 class="text-lg font-bold text-white mb-2">Kamera Tidak Terdeteksi</h2>
+        <p class="text-xs text-slate-300 mb-4">Izin akses kamera ditolak atau perangkat webcam tidak ditemukan. Anda tetap dapat berinteraksi dengan simulasi 3D menggunakan <strong>Mouse Drag</strong> (Rotasi), <strong>Scroll Wheel</strong> (Zoom), dan <strong>Tombol Keyboard 1 - 5</strong>.</p>
+        <button onclick="closeErrorBanner()" class="px-4 py-2 text-xs font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white transition">Gunakan Mode Manual Mouse/Keyboard</button>
+    </div>
+
+    <!-- Fullscreen Exit Instruction Toast -->
+    <div id="fullscreen-toast" class="hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 glass-panel px-5 py-2.5 rounded-full text-xs text-cyan-200 border border-cyan-400/40 shadow-2xl flex items-center gap-2 pointer-events-none transition-all duration-500 opacity-0">
+        <i class="fa-solid fa-circle-info text-cyan-400"></i>
+        <span>Tekan <strong class="text-white">ESC</strong>, <strong class="text-white">TAB 2x</strong>, atau <strong class="text-white">Klik Kursor 2x</strong> untuk keluar dari Mode Fullscreen</span>
+    </div>
 
     <script>
-        const PARTICLE_COUNT = 8000;
+        const PARTICLE_COUNT = 10000;
         let scene, camera, renderer, particles, geometry;
         let currentPositions = new Float32Array(PARTICLE_COUNT * 3);
         let targetPositions = new Float32Array(PARTICLE_COUNT * 3);
         let currentColors = new Float32Array(PARTICLE_COUNT * 3);
         let targetColors = new Float32Array(PARTICLE_COUNT * 3);
-        
-        /* Fisika Petasan (Firework Physics) */
+
+        /* Firework Physics Data */
         let explosionVelocities = new Float32Array(PARTICLE_COUNT * 3);
         let isExploding = false;
         let explosionFrame = 0;
-        const MAX_EXPLOSION_FRAMES = 50; // Durasi percikan petasan sebelum menyatu kembali
+        const MAX_EXPLOSION_FRAMES = 55;
 
+        /* Rotation & Pinch Zoom Controls */
         let targetRotationX = 0;
         let targetRotationY = 0;
+        let currentScale = 1.0;
+        let targetScale = 1.0;
         let hasHandDetected = false;
         let activeShapeIndex = 0;
 
-        // Toggle HUD Instruction Box
-        function toggleHUD() {
-            const content = document.getElementById('hud-content');
-            const btn = document.getElementById('hud-toggle-btn');
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                btn.innerText = 'Sembunyikan';
-            } else {
-                content.style.display = 'none';
-                btn.innerText = 'Tampilkan';
-            }
-        }
+        /* Feature Toggles & Fullscreen State */
+        let enableHandRotation = true;
+        let enableHandZoom = true;
+        let isFullscreenMode = false;
+        let lastTabPressTime = 0;
+        let toastTimeout = null;
 
-        // Bentuk 0: Awan
+        /* Mouse Drag Fallback Controls */
+        let isMouseDown = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        /* Shape Names Metadata */
+        const SHAPE_NAMES = [
+            { name: 'Awan Partikel', icon: '☁️', color: 'text-sky-300' },
+            { name: 'Stiker Marah 😡', icon: '😡', color: 'text-amber-400' },
+            { name: 'Planet Uranus 🪐', icon: '🪐', color: 'text-teal-300' },
+            { name: 'Teks "I LOVE YOU"', icon: '💖', color: 'text-pink-400' },
+            { name: 'Galaksi Spiral 🌀', icon: '🌀', color: 'text-purple-400' }
+        ];
+
+
+        // Shape 0: Cloud / Awan Partikel
         function getCloudPositions() {
             const pos = new Float32Array(PARTICLE_COUNT * 3);
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                pos[i * 3] = (Math.random() - 0.5) * 15;
-                pos[i * 3 + 1] = (Math.random() - 0.5) * 15;
-                pos[i * 3 + 2] = (Math.random() - 0.5) * 15;
+                const u = Math.random();
+                const v = Math.random();
+                const theta = u * 2.0 * Math.PI;
+                const phi = Math.acos(2.0 * v - 1.0);
+                const r = Math.cbrt(Math.random()) * 6.5;
+
+                pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+                pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * 0.7; // slightly flattened
+                pos[i * 3 + 2] = r * Math.cos(phi);
             }
             return pos;
         }
 
-        // Bentuk 1: Hati
-        function getHeartPositions() {
+        // Shape 1: Procedural 3D Angry Emoji (Stiker Marah 😡)
+        function getAngryEmojiPositions() {
             const pos = new Float32Array(PARTICLE_COUNT * 3);
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                const t = Math.random() * Math.PI * 2;
-                const u = Math.random() * Math.PI - Math.PI / 2;
-                let x = 16 * Math.pow(Math.sin(t), 3);
-                let y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-                let z = u * 2;
-                pos[i * 3] = x * 0.3;
-                pos[i * 3 + 1] = y * 0.3;
-                pos[i * 3 + 2] = z * 0.3;
+            
+            // Allocation counts for 10,000 particles:
+            // Head Sphere: ~6,200 | Eyebrows: ~1,200 | Eyes & Pupils: ~1,200 | Sneer Teeth & Mouth: ~1,400
+            const headCount = Math.floor(PARTICLE_COUNT * 0.62);
+            const browCount = Math.floor(PARTICLE_COUNT * 0.12);
+            const eyeCount = Math.floor(PARTICLE_COUNT * 0.12);
+            const mouthCount = PARTICLE_COUNT - headCount - browCount - eyeCount;
+
+            let idx = 0;
+
+            // 1. Yellow Head Sphere (Radius ~ 3.2)
+            for (let i = 0; i < headCount; i++) {
+                const u = Math.random();
+                const v = Math.random();
+                const theta = u * 2.0 * Math.PI;
+                const phi = Math.acos(2.0 * v - 1.0);
+                const r = 3.2 * Math.cbrt(0.2 + 0.8 * Math.random()); // spherical fill with solid surface
+
+                pos[idx * 3] = r * Math.sin(phi) * Math.cos(theta);
+                pos[idx * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+                pos[idx * 3 + 2] = r * Math.cos(phi);
+                idx++;
             }
+
+            // 2. Thick Slanted Angry Eyebrows (V-Angle Slanting Downwards toward middle)
+            for (let i = 0; i < browCount; i++) {
+                const isLeft = i % 2 === 0;
+                const t = Math.random(); // 0 to 1 along eyebrow length
+                const depth = (Math.random() - 0.5) * 0.6;
+                const thickness = (Math.random() - 0.5) * 0.45;
+
+                if (isLeft) {
+                    // Left Eyebrow: x from -2.1 to -0.3
+                    const x = -2.1 + t * 1.8;
+                    // Slanted downwards to center: higher at x=-2.1 (y=1.5), lower at x=-0.3 (y=0.7)
+                    const y = 0.7 + (1.0 - t) * 0.8 + thickness;
+                    const z = 2.7 + depth;
+                    pos[idx * 3] = x;
+                    pos[idx * 3 + 1] = y;
+                    pos[idx * 3 + 2] = z;
+                } else {
+                    // Right Eyebrow: x from 0.3 to 2.1
+                    const x = 0.3 + t * 1.8;
+                    // Slanted downwards to center: lower at x=0.3 (y=0.7), higher at x=2.1 (y=1.5)
+                    const y = 0.7 + t * 0.8 + thickness;
+                    const z = 2.7 + depth;
+                    pos[idx * 3] = x;
+                    pos[idx * 3 + 1] = y;
+                    pos[idx * 3 + 2] = z;
+                }
+                idx++;
+            }
+
+            // 3. Glaring Eyes & Pupils (Squinting/Fierce look)
+            for (let i = 0; i < eyeCount; i++) {
+                const isLeft = i % 2 === 0;
+                const u = Math.random() * Math.PI * 2;
+                const r = Math.sqrt(Math.random());
+
+                const eyeCenterX = isLeft ? -1.05 : 1.05;
+                const eyeCenterY = 0.35;
+                const eyeCenterZ = 2.95;
+
+                // Squinted oval eye shape
+                const x = eyeCenterX + r * 0.6 * Math.cos(u);
+                const y = eyeCenterY + r * 0.4 * Math.sin(u);
+                const z = eyeCenterZ + (Math.random() - 0.5) * 0.25;
+
+                pos[idx * 3] = x;
+                pos[idx * 3 + 1] = y;
+                pos[idx * 3 + 2] = z;
+                idx++;
+            }
+
+            // 4. Wide Angry Sneer Mouth with Gritted White Teeth
+            for (let i = 0; i < mouthCount; i++) {
+                const u = (Math.random() - 0.5) * 2.2; // x spread [-1.8, 1.8]
+                const v = (Math.random() - 0.5) * 0.7; // y thickness
+                const curvature = -0.3 * (u * u); // downward curve / angry sneer
+
+                const x = u * 1.0;
+                const y = -1.15 + curvature + v;
+                const z = 2.85 + (Math.random() - 0.5) * 0.3;
+
+                pos[idx * 3] = x;
+                pos[idx * 3 + 1] = y;
+                pos[idx * 3 + 2] = z;
+                idx++;
+            }
+
             return pos;
         }
 
-        // Bentuk 2: Uranus
+        // Shape 2: Planet Uranus 🪐
         function getUranusPositions() {
             const pos = new Float32Array(PARTICLE_COUNT * 3);
+            const bodyCount = Math.floor(PARTICLE_COUNT * 0.45);
+
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                if (i < PARTICLE_COUNT * 0.45) {
-                    const u = Math.random() * Math.PI * 2;
-                    const v = Math.random() * Math.PI;
-                    const r = 2.5;
-                    pos[i * 3] = r * Math.sin(v) * Math.cos(u);
-                    pos[i * 3 + 1] = r * Math.sin(v) * Math.sin(u);
-                    pos[i * 3 + 2] = r * Math.cos(v);
+                if (i < bodyCount) {
+                    // Central Sphere
+                    const u = Math.random();
+                    const v = Math.random();
+                    const theta = u * 2.0 * Math.PI;
+                    const phi = Math.acos(2.0 * v - 1.0);
+                    const r = 2.6 * Math.cbrt(Math.random());
+
+                    pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+                    pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+                    pos[i * 3 + 2] = r * Math.cos(phi);
                 } else {
+                    // Tilted Concentric Ring System
                     const theta = Math.random() * Math.PI * 2;
-                    const r = 3.8 + Math.random() * 2.8;
-                    pos[i * 3] = r * Math.cos(theta);
-                    pos[i * 3 + 1] = (Math.random() - 0.5) * 0.25;
-                    pos[i * 3 + 2] = r * Math.sin(theta);
+                    const r = 3.6 + Math.random() * 3.2; // ring radius
+                    
+                    // Base flat ring coordinates
+                    let rx = r * Math.cos(theta);
+                    let ry = (Math.random() - 0.5) * 0.2;
+                    let rz = r * Math.sin(theta);
+
+                    // Tilt ring by ~35 degrees around X axis
+                    const tilt = 0.6;
+                    const cosT = Math.cos(tilt);
+                    const sinT = Math.sin(tilt);
+
+                    pos[i * 3] = rx;
+                    pos[i * 3 + 1] = ry * cosT - rz * sinT;
+                    pos[i * 3 + 2] = ry * sinT + rz * cosT;
                 }
             }
             return pos;
         }
 
-        // Bentuk 3: Teks
+        // Shape 3: 3D Text "I LOVE YOU"
         function getTextPositions() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = 600;
-            canvas.height = 120;
+            canvas.width = 700;
+            canvas.height = 140;
 
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = 'white';
-            ctx.font = 'bold 50px Arial';
+            ctx.font = 'bold 62px Arial, sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText('I LOVE YOU', 300, 75);
+            ctx.textBaseline = 'middle';
+            ctx.fillText('do u like me??', canvas.width / 2, canvas.height / 2);
 
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const validPixels = [];
@@ -224,8 +432,8 @@
                     const index = (y * canvas.width + x) * 4;
                     if (imgData.data[index] > 128) {
                         validPixels.push({
-                            x: (x - canvas.width / 2) * 0.03,
-                            y: -(y - canvas.height / 2) * 0.03
+                            x: (x - canvas.width / 2) * 0.024,
+                            y: -(y - canvas.height / 2) * 0.024
                         });
                     }
                 }
@@ -234,82 +442,200 @@
             const pos = new Float32Array(PARTICLE_COUNT * 3);
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const pt = validPixels[i % validPixels.length];
-                pos[i * 3] = pt.x + (Math.random() - 0.5) * 0.03;
-                pos[i * 3 + 1] = pt.y + (Math.random() - 0.5) * 0.03;
-                pos[i * 3 + 2] = (Math.random() - 0.5) * 0.1;
+                pos[i * 3] = pt.x + (Math.random() - 0.5) * 0.04;
+                pos[i * 3 + 1] = pt.y + (Math.random() - 0.5) * 0.04;
+                pos[i * 3 + 2] = (Math.random() - 0.5) * 0.4;
             }
             return pos;
         }
 
-        // Warna Dasar
+        // Shape 4: 3D Spiral Galaxy 🌀
+        function getGalaxyPositions() {
+            const pos = new Float32Array(PARTICLE_COUNT * 3);
+            const arms = 4;
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const r = Math.pow(Math.random(), 2) * 7.5;
+                const armIndex = i % arms;
+                const theta = r * 1.1 + (armIndex * 2 * Math.PI / arms);
+
+                const randomOffset = (1.0 / (r + 0.5)) * 0.6;
+                const x = Math.cos(theta) * r + (Math.random() - 0.5) * randomOffset;
+                const z = Math.sin(theta) * r + (Math.random() - 0.5) * randomOffset;
+                const y = (Math.random() - 0.5) * Math.exp(-r * 0.3) * 1.2;
+
+                pos[i * 3] = x;
+                pos[i * 3 + 1] = y;
+                pos[i * 3 + 2] = z;
+            }
+            return pos;
+        }
+
+
+        // Cloud Colors (Nebula Light Cyan & Purple)
         function getCloudColors() {
             const col = new Float32Array(PARTICLE_COUNT * 3);
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                col[i * 3] = 0.2 + Math.random() * 0.8;
-                col[i * 3 + 1] = 0.2 + Math.random() * 0.8;
-                col[i * 3 + 2] = 0.5 + Math.random() * 0.5;
+                col[i * 3] = 0.2 + Math.random() * 0.6;     // R
+                col[i * 3 + 1] = 0.7 + Math.random() * 0.3; // G
+                col[i * 3 + 2] = 0.9 + Math.random() * 0.1; // B
             }
             return col;
         }
 
-        function getHeartColors() {
+        // Angry Emoji Colors 😡 (Yellow Head, Dark Eyebrows, Glaring Eyes, White Teeth)
+        function getAngryEmojiColors() {
             const col = new Float32Array(PARTICLE_COUNT * 3);
-            for (let i = 0; i < PARTICLE_COUNT; i++) {
-                col[i * 3] = 0.9 + Math.random() * 0.1;
-                col[i * 3 + 1] = 0.05 + Math.random() * 0.15;
-                col[i * 3 + 2] = 0.1 + Math.random() * 0.25;
+            const headCount = Math.floor(PARTICLE_COUNT * 0.62);
+            const browCount = Math.floor(PARTICLE_COUNT * 0.12);
+            const eyeCount = Math.floor(PARTICLE_COUNT * 0.12);
+
+            let idx = 0;
+
+            // 1. Bright Yellow/Gold Head
+            for (let i = 0; i < headCount; i++) {
+                col[idx * 3] = 1.0;                         // R
+                col[idx * 3 + 1] = 0.8 + Math.random() * 0.18;// G
+                col[idx * 3 + 2] = 0.05 + Math.random() * 0.1; // B
+                idx++;
             }
+
+            // 2. Dark Angry Eyebrows (Dark Brown/Black)
+            for (let i = 0; i < browCount; i++) {
+                col[idx * 3] = 0.18;
+                col[idx * 3 + 1] = 0.06;
+                col[idx * 3 + 2] = 0.02;
+                idx++;
+            }
+
+            // 3. Glaring Eyes (Sclera white / pupil black mixture)
+            for (let i = 0; i < eyeCount; i++) {
+                if (i % 5 === 0) {
+                    // Dark pupil center
+                    col[idx * 3] = 0.05;
+                    col[idx * 3 + 1] = 0.05;
+                    col[idx * 3 + 2] = 0.05;
+                } else {
+                    // Sclera white
+                    col[idx * 3] = 0.98;
+                    col[idx * 3 + 1] = 0.98;
+                    col[idx * 3 + 2] = 0.92;
+                }
+                idx++;
+            }
+
+            // 4. Gritted White Teeth & Dark Mouth Border
+            for (let i = idx; i < PARTICLE_COUNT; i++) {
+                if (i % 6 === 0) {
+                    // Sneer mouth outline
+                    col[i * 3] = 0.25;
+                    col[i * 3 + 1] = 0.02;
+                    col[i * 3 + 2] = 0.02;
+                } else {
+                    // Bright white teeth
+                    col[i * 3] = 0.98;
+                    col[i * 3 + 1] = 0.98;
+                    col[i * 3 + 2] = 0.95;
+                }
+            }
+
             return col;
         }
 
+        // Uranus Colors 🪐
         function getUranusColors() {
             const col = new Float32Array(PARTICLE_COUNT * 3);
+            const bodyCount = Math.floor(PARTICLE_COUNT * 0.45);
+
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                if (i < PARTICLE_COUNT * 0.45) {
-                    col[i * 3] = 0.35 + Math.random() * 0.15;
-                    col[i * 3 + 1] = 0.85 + Math.random() * 0.15;
-                    col[i * 3 + 2] = 0.9 + Math.random() * 0.1;
-                } else {
+                if (i < bodyCount) {
+                    // Cyan / Turquoise ice giant body
                     col[i * 3] = 0.25 + Math.random() * 0.15;
+                    col[i * 3 + 1] = 0.85 + Math.random() * 0.15;
+                    col[i * 3 + 2] = 0.92 + Math.random() * 0.08;
+                } else {
+                    // Pale silver & blue icy rings
+                    col[i * 3] = 0.4 + Math.random() * 0.3;
                     col[i * 3 + 1] = 0.75 + Math.random() * 0.2;
-                    col[i * 3 + 2] = 0.85 + Math.random() * 0.15;
+                    col[i * 3 + 2] = 0.88 + Math.random() * 0.12;
                 }
             }
             return col;
         }
 
+        // Text Colors 💖 (Vibrant Pink & Cyan Glow)
         function getTextColor() {
             const col = new Float32Array(PARTICLE_COUNT * 3);
             for (let i = 0; i < PARTICLE_COUNT; i++) {
-                col[i * 3] = 0.0;
-                col[i * 3 + 1] = 1.0;
-                col[i * 3 + 2] = 0.8;
+                if (i % 2 === 0) {
+                    col[i * 3] = 1.0;
+                    col[i * 3 + 1] = 0.2;
+                    col[i * 3 + 2] = 0.6;
+                } else {
+                    col[i * 3] = 0.1;
+                    col[i * 3 + 1] = 0.9;
+                    col[i * 3 + 2] = 1.0;
+                }
             }
             return col;
         }
 
+        // Galaxy Colors 🌀 (Deep Cosmic Purple, Magenta & Golden Core)
+        function getGalaxyColors() {
+            const col = new Float32Array(PARTICLE_COUNT * 3);
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const r = i / PARTICLE_COUNT;
+                if (i % 15 === 0) {
+                    // Bright star flashes
+                    col[i * 3] = 1.0;
+                    col[i * 3 + 1] = 1.0;
+                    col[i * 3 + 2] = 0.9;
+                } else if (r < 0.2) {
+                    // Golden bright core
+                    col[i * 3] = 1.0;
+                    col[i * 3 + 1] = 0.8;
+                    col[i * 3 + 2] = 0.3;
+                } else {
+                    // Spiral arm purple/blue gradient
+                    col[i * 3] = 0.6 + Math.random() * 0.4;
+                    col[i * 3 + 1] = 0.1 + Math.random() * 0.4;
+                    col[i * 3 + 2] = 0.8 + Math.random() * 0.2;
+                }
+            }
+            return col;
+        }
+
+        /* Shape Data Arrays */
         const shapes = [
             getCloudPositions(),
-            getHeartPositions(),
+            getAngryEmojiPositions(),
             getUranusPositions(),
-            getTextPositions()
+            getTextPositions(),
+            getGalaxyPositions()
         ];
 
         const shapeColors = [
             getCloudColors(),
-            getHeartColors(),
+            getAngryEmojiColors(),
             getUranusColors(),
-            getTextColor()
+            getTextColor(),
+            getGalaxyColors()
         ];
 
         function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+            
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 12;
+            scene.fog = new THREE.FogExp2(0x030712, 0.03);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 11;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setClearColor(0x030712, 1);
+            container.appendChild(renderer.domElement);
 
             geometry = new THREE.BufferGeometry();
             const initialPos = shapes[0];
@@ -325,22 +651,41 @@
             geometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
             geometry.setAttribute('color', new THREE.BufferAttribute(currentColors, 3));
 
+            // Glowing Circular Particle Texture Generator
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.3, 'rgba(255,255,255,0.8)');
+            grad.addColorStop(0.8, 'rgba(255,255,255,0.15)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 32, 32);
+
+            const texture = new THREE.CanvasTexture(canvas);
+
             const material = new THREE.PointsMaterial({
-                size: 0.08,
+                size: 0.12,
+                map: texture,
                 vertexColors: true,
                 blending: THREE.AdditiveBlending,
                 transparent: true,
-                opacity: 0.9
+                depthWrite: false,
+                opacity: 0.95
             });
 
             particles = new THREE.Points(geometry, material);
             scene.add(particles);
 
+            // Window Resize & Mouse Drag Listeners
             window.addEventListener('resize', onWindowResize);
+            setupMouseAndKeyboardListeners(container);
+
             animate();
         }
 
-        /* SIMULASI LEDAKAN PETASAN (FIREWORK BURST) */
         function triggerFireworkExplosion() {
             isExploding = true;
             explosionFrame = 0;
@@ -352,25 +697,26 @@
                 const phi = Math.acos(2.0 * v - 1.0);
                 const r = Math.cbrt(Math.random());
 
-                const speed = 0.8 + Math.random() * 1.0;
+                const speed = 0.7 + Math.random() * 1.1;
 
                 explosionVelocities[i * 3] = r * Math.sin(phi) * Math.cos(theta) * speed;
                 explosionVelocities[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta) * speed;
                 explosionVelocities[i * 3 + 2] = r * Math.cos(phi) * speed;
 
+                // Golden/Firework Sparkler Colors
                 const sparkType = Math.random();
                 if (sparkType > 0.6) {
                     targetColors[i * 3] = 1.0;
                     targetColors[i * 3 + 1] = 0.95;
-                    targetColors[i * 3 + 2] = 0.6;
+                    targetColors[i * 3 + 2] = 0.5;
                 } else if (sparkType > 0.3) {
                     targetColors[i * 3] = 1.0;
                     targetColors[i * 3 + 1] = 0.4;
-                    targetColors[i * 3 + 2] = 0.05;
-                } else {
-                    targetColors[i * 3] = 1.0;
-                    targetColors[i * 3 + 1] = 0.75;
                     targetColors[i * 3 + 2] = 0.1;
+                } else {
+                    targetColors[i * 3] = 0.2;
+                    targetColors[i * 3 + 1] = 0.9;
+                    targetColors[i * 3 + 2] = 1.0;
                 }
             }
         }
@@ -378,13 +724,14 @@
         function setShape(shapeIndex) {
             if (activeShapeIndex === shapeIndex) return;
 
-            // Pemicu Petasan: Berganti dari Genggam (Hati = 1) ke Lepas/Buka (Awan = 0)
+            // Firework Trigger: Fast transition from Angry Emoji (1) to Open Cloud (0)
             if (activeShapeIndex === 1 && shapeIndex === 0) {
                 triggerFireworkExplosion();
             }
 
             activeShapeIndex = shapeIndex;
-            
+            updateUIBadge(shapeIndex);
+
             const targetPos = shapes[shapeIndex];
             const targetCol = shapeColors[shapeIndex];
 
@@ -396,6 +743,17 @@
             }
         }
 
+        function setShapeManual(index) {
+            setShape(index);
+        }
+
+        function updateUIBadge(shapeIndex) {
+            const meta = SHAPE_NAMES[shapeIndex];
+            document.getElementById('gesture-icon').innerText = meta.icon;
+            document.getElementById('gesture-name').innerText = meta.name;
+            document.getElementById('active-gesture-badge').className = `flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-lg bg-slate-800/90 ${meta.color} border border-cyan-400/30 gesture-active-pulse`;
+        }
+
         function animate() {
             requestAnimationFrame(animate);
 
@@ -404,12 +762,12 @@
 
             if (isExploding) {
                 explosionFrame++;
-                const gravity = 0.015;
-                const drag = 0.93;
+                const gravity = 0.012;
+                const drag = 0.935;
 
                 for (let i = 0; i < PARTICLE_COUNT; i++) {
                     const idx = i * 3;
-                    
+
                     positions[idx] += explosionVelocities[idx];
                     positions[idx + 1] += explosionVelocities[idx + 1];
                     positions[idx + 2] += explosionVelocities[idx + 2];
@@ -418,9 +776,9 @@
                     explosionVelocities[idx + 1] = (explosionVelocities[idx + 1] - gravity) * drag;
                     explosionVelocities[idx + 2] *= drag;
 
-                    colorsAttr[idx] += (targetColors[idx] - colorsAttr[idx]) * 0.25;
-                    colorsAttr[idx + 1] += (targetColors[idx + 1] - colorsAttr[idx + 1]) * 0.25;
-                    colorsAttr[idx + 2] += (targetColors[idx + 2] - colorsAttr[idx + 2]) * 0.25;
+                    colorsAttr[idx] += (targetColors[idx] - colorsAttr[idx]) * 0.2;
+                    colorsAttr[idx + 1] += (targetColors[idx + 1] - colorsAttr[idx + 1]) * 0.2;
+                    colorsAttr[idx + 2] += (targetColors[idx + 2] - colorsAttr[idx + 2]) * 0.2;
                 }
 
                 if (explosionFrame >= MAX_EXPLOSION_FRAMES) {
@@ -431,20 +789,27 @@
                     }
                 }
             } else {
+                // Smooth Lerp Transition to target shape positions and colors
                 for (let i = 0; i < PARTICLE_COUNT * 3; i++) {
-                    positions[i] += (targetPositions[i] - positions[i]) * 0.08;
-                    colorsAttr[i] += (targetColors[i] - colorsAttr[i]) * 0.08;
+                    positions[i] += (targetPositions[i] - positions[i]) * 0.085;
+                    colorsAttr[i] += (targetColors[i] - colorsAttr[i]) * 0.085;
                 }
             }
 
             geometry.attributes.position.needsUpdate = true;
             geometry.attributes.color.needsUpdate = true;
 
+            // Smooth Pinch-Zoom Scale Interpolation
+            currentScale += (targetScale - currentScale) * 0.1;
+            particles.scale.set(currentScale, currentScale, currentScale);
+
+            // Smooth 3D Rotation Interpolation
             if (hasHandDetected) {
-                particles.rotation.y = THREE.MathUtils.lerp(particles.rotation.y, targetRotationY, 0.05);
-                particles.rotation.x = THREE.MathUtils.lerp(particles.rotation.x, targetRotationX, 0.05);
+                particles.rotation.y = THREE.MathUtils.lerp(particles.rotation.y, targetRotationY, 0.08);
+                particles.rotation.x = THREE.MathUtils.lerp(particles.rotation.x, targetRotationX, 0.08);
             } else {
-                particles.rotation.y += 0.005;
+                // Subtle ambient auto-rotation when no hand is present
+                particles.rotation.y += 0.004;
             }
 
             renderer.render(scene, camera);
@@ -456,43 +821,229 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        function detectGesture(landmarks) {
-            const isIndexOpen = landmarks[8].y < landmarks[6].y;
-            const isMiddleOpen = landmarks[12].y < landmarks[10].y;
-            const isRingOpen = landmarks[16].y < landmarks[14].y;
-            const isPinkyOpen = landmarks[20].y < landmarks[18].y;
 
-            if (isIndexOpen && isMiddleOpen && !isRingOpen && !isPinkyOpen) return 3; // Peace = Teks
-            if (isIndexOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) return 2; // Telunjuk = Uranus
-            if (!isIndexOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) return 1; // Mengepal = Hati
-            if (isIndexOpen && isMiddleOpen && isRingOpen && isPinkyOpen) return 0; // Terbuka = Awan
+        // Helper: Euclidean distance between 2 MediaPipe landmarks
+        function distLM(p1, p2) {
+            const dx = p1.x - p2.x;
+            const dy = p1.y - p2.y;
+            const dz = (p1.z || 0) - (p2.z || 0);
+            return Math.sqrt(dx * dx + dy * dy + dz * dz);
+        }
+
+        function detectGesture(landmarks) {
+            const wrist = landmarks[0];
+
+            // Finger Extension Detection using distance from wrist vs PIP joint
+            const isIndexOpen = distLM(landmarks[8], wrist) > distLM(landmarks[6], wrist) * 1.15;
+            const isMiddleOpen = distLM(landmarks[12], wrist) > distLM(landmarks[10], wrist) * 1.15;
+            const isRingOpen = distLM(landmarks[16], wrist) > distLM(landmarks[14], wrist) * 1.15;
+            const isPinkyOpen = distLM(landmarks[20], wrist) > distLM(landmarks[18], wrist) * 1.15;
+
+            // Gestures Logic Classification
+            // 🤟 3-Jari / Metal Sign (Index + Pinky Extended, or Index + Middle + Pinky) -> Shape 4: Galaksi
+            if (isIndexOpen && isPinkyOpen && !isRingOpen) {
+                return 4;
+            }
+            // ✌️ 2-Jari Peace Sign (Index + Middle) -> Shape 3: Teks "I LOVE YOU"
+            if (isIndexOpen && isMiddleOpen && !isRingOpen && !isPinkyOpen) {
+                return 3;
+            }
+            // ☝️ 1-Jari Telunjuk -> Shape 2: Uranus
+            if (isIndexOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) {
+                return 2;
+            }
+            // ✊ Genggam Tangan (Fist) -> Shape 1: Stiker Marah 😡
+            if (!isIndexOpen && !isMiddleOpen && !isRingOpen && !isPinkyOpen) {
+                return 1;
+            }
+            // 🖐️ Buka Tangan (Open Hand) -> Shape 0: Awan Partikel
+            if (isIndexOpen && isMiddleOpen && isRingOpen && isPinkyOpen) {
+                return 0;
+            }
 
             return activeShapeIndex;
         }
 
-        function onResults(results) {
-            // JIKA LEDAKAN SEDANG BERLANGSUNG, HENTIKAN TRACKING TANGAN SEMENTARA
-            if (isExploding) {
-                return;
-            }
+        function toggleHandRotation(enabled) {
+            enableHandRotation = enabled;
+        }
 
+        function toggleHandZoom(enabled) {
+            enableHandZoom = enabled;
+        }
+
+        function onResults(results) {
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 hasHandDetected = true;
                 const landmarks = results.multiHandLandmarks[0];
 
-                const palmCenter = landmarks[9];
+                // Rotasi Tangan berdasarkan posisi telapak tangan (jika aktif)
+                if (enableHandRotation) {
+                    const palmCenter = landmarks[9];
+                    const mirroredX = 1.0 - palmCenter.x;
+                    targetRotationY = (mirroredX - 0.5) * Math.PI * 1.8;
+                    targetRotationX = (palmCenter.y - 0.5) * Math.PI * 1.4;
+                }
 
-                targetRotationY = (0.5 - palmCenter.x) * Math.PI * 1.5;
-                targetRotationX = (palmCenter.y - 0.5) * Math.PI * 1.2;
+                // Zoom Control berdasarkan Jarak Tangan ke Kamera (jika aktif)
+                if (enableHandZoom) {
+                    const handSize = distLM(landmarks[0], landmarks[9]);
+                    const minSize = 0.12; // Tangan jauh dari kamera
+                    const maxSize = 0.40; // Tangan dekat dengan kamera
+                    const clampedSize = Math.max(minSize, Math.min(maxSize, handSize));
+                    const normalized = (clampedSize - minSize) / (maxSize - minSize);
+                    targetScale = 0.5 + normalized * 1.7;
+                }
 
-                const shapeIndex = detectGesture(landmarks);
-                setShape(shapeIndex);
+                const gestureResult = detectGesture(landmarks);
+                if (typeof gestureResult === 'number') {
+                    setShape(gestureResult);
+                }
             } else {
                 hasHandDetected = false;
             }
         }
 
+        function toggleFullscreen() {
+            if (isFullscreenMode) {
+                exitFullscreenMode();
+            } else {
+                enterFullscreenMode();
+            }
+        }
+
+        function enterFullscreenMode() {
+            isFullscreenMode = true;
+            document.getElementById('hud-container').classList.add('hidden');
+            document.getElementById('webcam-container').classList.add('hidden');
+            document.getElementById('error-msg').classList.add('hidden');
+
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
+
+            showFullscreenToast();
+        }
+
+        function exitFullscreenMode() {
+            isFullscreenMode = false;
+            document.getElementById('hud-container').classList.remove('hidden');
+            document.getElementById('webcam-container').classList.remove('hidden');
+
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+
+            hideFullscreenToast();
+        }
+
+        function showFullscreenToast() {
+            const toast = document.getElementById('fullscreen-toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.remove('opacity-0'); }, 10);
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => { toast.classList.add('hidden'); }, 500);
+            }, 3500);
+        }
+
+        function hideFullscreenToast() {
+            const toast = document.getElementById('fullscreen-toast');
+            toast.classList.add('opacity-0');
+            setTimeout(() => { toast.classList.add('hidden'); }, 500);
+        }
+
+        function setupMouseAndKeyboardListeners(container) {
+            // Mouse Drag Orbit
+            container.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isMouseDown) return;
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                targetRotationY += deltaX * 0.008;
+                targetRotationX += deltaY * 0.008;
+
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('mouseup', () => { isMouseDown = false; });
+
+            // Scroll Wheel Zoom
+            container.addEventListener('wheel', (e) => {
+                targetScale += e.deltaY * -0.0015;
+                targetScale = Math.max(0.3, Math.min(2.5, targetScale));
+            });
+
+            // Double Click to exit Fullscreen
+            window.addEventListener('dblclick', () => {
+                if (isFullscreenMode) {
+                    exitFullscreenMode();
+                }
+            });
+
+            // Fullscreen browser change listener
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement && isFullscreenMode) {
+                    exitFullscreenMode();
+                }
+            });
+
+            // Keyboard Shortcuts (1-5, Space, ESC & Double Tab for Fullscreen exit)
+            window.addEventListener('keydown', (e) => {
+                // ESC Key -> Keluar Fullscreen
+                if (e.key === 'Escape' && isFullscreenMode) {
+                    exitFullscreenMode();
+                }
+
+                // TAB Key Ketuk 2x (< 400ms) -> Keluar Fullscreen
+                if (e.key === 'Tab') {
+                    const now = Date.now();
+                    if (now - lastTabPressTime < 400 && isFullscreenMode) {
+                        e.preventDefault();
+                        exitFullscreenMode();
+                    }
+                    lastTabPressTime = now;
+                }
+
+                if (e.key === '1') setShapeManual(0);
+                if (e.key === '2') setShapeManual(1);
+                if (e.key === '3') setShapeManual(2);
+                if (e.key === '4') setShapeManual(3);
+                if (e.key === '5') setShapeManual(4);
+                if (e.code === 'Space') triggerFireworkExplosion();
+            });
+        }
+
+        // Toggle HUD Collapse/Expand
+        function toggleHUD() {
+            const content = document.getElementById('hud-content');
+            const btn = document.getElementById('hud-toggle-btn');
+            
+            if (!content || !btn) return;
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                btn.innerHTML = `<i class="fa-solid fa-chevron-up mr-1" id="hud-toggle-icon"></i> Sembunyikan`;
+            } else {
+                content.classList.add('hidden');
+                btn.innerHTML = `<i class="fa-solid fa-chevron-down mr-1" id="hud-toggle-icon"></i> Tampilkan`;
+            }
+        }
+
+        function closeErrorBanner() {
+            document.getElementById('error-msg').classList.add('hidden');
+        }
+
         const videoElement = document.getElementById('webcam');
+        const cameraDot = document.getElementById('camera-dot');
+        const cameraText = document.getElementById('camera-text');
         const errorMsg = document.getElementById('error-msg');
 
         initThreeJS();
@@ -504,15 +1055,20 @@
         hands.setOptions({
             maxNumHands: 1,
             modelComplexity: 1,
-            minDetectionConfidence: 0.6,
-            minTrackingConfidence: 0.6
+            minDetectionConfidence: 0.65,
+            minTrackingConfidence: 0.65
         });
 
         hands.onResults(onResults);
 
-        navigator.mediaDevices.getUserMedia({ video: true })
+        // Start Webcam Feed
+        navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
             .then((stream) => {
                 videoElement.srcObject = stream;
+                
+                cameraDot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+                cameraText.innerText = "Kamera Aktif";
+
                 const cameraUtils = new Camera(videoElement, {
                     onFrame: async () => {
                         await hands.send({ image: videoElement });
@@ -523,8 +1079,10 @@
                 cameraUtils.start();
             })
             .catch((err) => {
-                console.error("Akses kamera ditolak/gagal:", err);
-                errorMsg.style.display = "block";
+                console.warn("Akses kamera ditolak atau gagal:", err);
+                cameraDot.className = "w-2 h-2 rounded-full bg-rose-500";
+                cameraText.innerText = "Mode Manual";
+                errorMsg.classList.remove('hidden');
             });
     </script>
 </body>
